@@ -3,91 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painter - WiFi Host</title>
+    <title>Painter PC - WiFi Host</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; text-align: center; }
-        #status-bar { background: #333; padding: 15px; border-bottom: 2px solid #444; }
-        .id-label { background: #007bff; padding: 5px 15px; border-radius: 5px; font-weight: bold; font-size: 20px; }
-        canvas { background: white; cursor: crosshair; touch-action: none; margin-top: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .btn { padding: 12px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin: 5px; }
-        .btn-success { background: #28a745; color: white; font-size: 18px; }
+        :root { --primary: #007bff; --success: #28a745; --bg: #1a1a1a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; text-align: center; }
+        #status-bar { background: #333; padding: 15px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; }
+        .id-badge { background: var(--primary); padding: 5px 15px; border-radius: 5px; font-weight: bold; font-size: 1.2rem; }
+        #canvas-wrap { margin-top: 20px; position: relative; display: inline-block; }
+        canvas { background: white; cursor: crosshair; touch-action: none; box-shadow: 0 0 30px rgba(0,0,0,0.5); border-radius: 5px; }
+        .controls { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
+        select, button { padding: 10px 20px; border-radius: 8px; border: none; font-size: 16px; cursor: pointer; }
+        .btn-send { background: var(--success); color: white; width: 600px; margin-top: 15px; font-size: 20px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
 
     <div id="status-bar">
         <div>สถานะ: <b id="conn-status" style="color:#ffc107;">กำลังขอ ID...</b></div>
-        <div style="margin-top:10px;">ID ของคุณ: <span class="id-label" id="my-id">---</span></div>
+        <div>รหัสห้องสำหรับตรวจ: <span class="id-badge" id="my-id">---</span></div>
     </div>
 
-    <select id="template" style="padding:10px; margin: 20px 0;">
-        <option value="">-- เลือกรูปต้นแบบ --</option>
-        <option value="🐶">สุนัข</option><option value="🐱">แมว</option><option value="🐰">กระต่าย</option>
-    </select>
-    <button class="btn" onclick="clearCanvas()">🗑️ ล้างจอ</button>
+    <div class="controls">
+        <select id="template">
+            <option value="">-- เลือกภาพต้นแบบ --</option>
+            <option value="🐶">สุนัข</option><option value="🐱">แมว</option><option value="🐰">กระต่าย</option>
+            <option value="🦊">จิ้งจอก</option><option value="🐼">แพนด้า</option><option value="🦁">สิงโต</option>
+        </select>
+        <button onclick="undo()">↩️ ย้อนกลับ</button>
+        <button onclick="clearCanvas()">🗑️ ล้างหน้าจอ</button>
+    </div>
 
     <div id="canvas-wrap">
         <canvas id="paintCanvas" width="600" height="600"></canvas>
     </div>
 
-    <button class="btn btn-success" id="send-btn" style="display:none; width: 80%;" onclick="sendData()">ส่งไปเครื่องผู้ตรวจ 🚀</button>
+    <center><button class="btn-send" id="send-btn" onclick="sendData()">ส่งรูปภาพไปที่แท็บเล็ต 🚀</button></center>
 
     <script>
         const canvas = document.getElementById('paintCanvas'), ctx = canvas.getContext('2d');
-        let conn = null, drawing = false;
+        let conn = null, drawing = false, undoStack = [];
 
-        // ใช้การตั้งค่า STUN/TURN เพื่อให้เจาะทะลุ 4G ได้
-        const peer = new Peer({
-            config: {
-                'iceServers': [
-                    { 'urls': 'stun:stun.l.google.com:19302' },
-                    { 'urls': 'stun:stun1.l.google.com:19302' },
-                    { 'urls': 'stun:stun2.l.google.com:19302' }
-                ]
-            }
+        // --- ตั้งค่ารหัส ID เองที่นี่ ---
+        const ROOM_ID = 'MY-ROOM-999'; 
+
+        const peer = new Peer(ROOM_ID, {
+            config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }, { 'urls': 'stun:stun1.l.google.com:19302' }] }
         });
 
         peer.on('open', id => {
             document.getElementById('my-id').innerText = id;
-            document.getElementById('conn-status').innerText = "รอแท็บเล็ตเชื่อมต่อ...";
+            document.getElementById('conn-status').innerText = "รอผู้ตรวจเชื่อมต่อ...";
         });
 
         peer.on('connection', c => {
             conn = c;
             document.getElementById('conn-status').innerText = "เชื่อมต่อสำเร็จ ✅";
             document.getElementById('conn-status').style.color = "#28a745";
-            
-            conn.on('data', data => {
-                if(data.score) alert("ได้รับคะแนนแล้ว: " + data.score);
-            });
+            conn.on('data', data => { if(data.score) alert("คะแนนที่ได้: " + data.score); });
         });
 
         // ระบบวาด
         ctx.fillStyle = "white"; ctx.fillRect(0,0,600,600);
-        canvas.onmousedown = () => drawing = true;
-        window.onmouseup = () => { drawing = false; ctx.beginPath(); };
-        canvas.onmousemove = (e) => {
+        saveState();
+
+        function getPos(e) {
+            const r = canvas.getBoundingClientRect();
+            return { x: (e.clientX || e.touches[0].clientX) - r.left, y: (e.clientY || e.touches[0].clientY) - r.top };
+        }
+
+        canvas.onmousedown = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+        window.onmousemove = (e) => {
             if(!drawing) return;
+            const p = getPos(e);
             ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
-            ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke();
+            ctx.lineTo(p.x, p.y); ctx.stroke();
         };
+        window.onmouseup = () => { if(drawing) { drawing = false; saveState(); } };
 
         document.getElementById('template').onchange = function() {
             clearCanvas();
             if(this.value) {
                 ctx.save(); ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="400px Arial";
                 ctx.fillStyle="rgba(0,0,0,0.05)"; ctx.fillText(this.value, 300, 300); ctx.restore();
-                document.getElementById('send-btn').style.display = 'inline-block';
+                document.getElementById('send-btn').style.display = 'block';
             }
         };
 
-        function clearCanvas() { ctx.fillStyle = "white"; ctx.fillRect(0,0,600,600); }
+        function saveState() { undoStack.push(ctx.getImageData(0,0,600,600)); if(undoStack.length > 20) undoStack.shift(); }
+        function undo() { if(undoStack.length > 1) { undoStack.pop(); ctx.putImageData(undoStack[undoStack.length-1], 0,0); } }
+        function clearCanvas() { ctx.fillStyle = "white"; ctx.fillRect(0,0,600,600); document.getElementById('template').onchange(); }
+
         function sendData() {
             if(conn && conn.open) {
                 conn.send({ img: canvas.toDataURL('image/jpeg', 0.5), char: document.getElementById('template').value });
-                alert("ส่งรูปภาพเรียบร้อย!");
-            } else { alert("เครื่องผู้ตรวจไม่ได้เชื่อมต่ออยู่!"); }
+                alert("ส่งรูปภาพแล้ว!");
+            } else { alert("ยังไม่ได้เชื่อมต่อกับแท็บเล็ต!"); }
         }
     </script>
 </body>
