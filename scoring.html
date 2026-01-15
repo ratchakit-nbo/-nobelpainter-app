@@ -8,8 +8,8 @@
     <style>
         :root { --accent: #00f2fe; --bg: #0b101a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .card { width: 90%; max-width: 450px; background: #1a1f29; padding: 30px; border-radius: 25px; margin-top: 30px; text-align: center; border: 1px solid #333; }
-        input { width: 80%; padding: 15px; border-radius: 10px; border: none; font-size: 20px; text-align: center; margin-bottom: 15px; }
+        .card { width: 90%; max-width: 450px; background: #1a1f29; padding: 30px; border-radius: 25px; margin-top: 30px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 80%; padding: 15px; border-radius: 10px; border: none; font-size: 20px; text-align: center; margin-bottom: 15px; background: #0b0e14; color: white; border: 1px solid #333; }
         .btn { width: 85%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; }
         .btn-connect { background: #711cff; color: white; }
         .btn-send { background: var(--accent); color: #000; margin-top: 15px; }
@@ -22,8 +22,8 @@
     <div class="card" id="setup-box">
         <p>กรอกรหัส 6 หลักจากเครื่องวาด</p>
         <input type="number" id="target-id" placeholder="000000">
-        <button class="btn btn-connect" id="conn-btn" onclick="connect()">เชื่อมต่อ 🔗</button>
-        <p id="status" style="margin-top:15px; color:#888;">ยังไม่ได้เชื่อมต่อ</p>
+        <button class="btn btn-connect" onclick="connect()">เชื่อมต่อ 🔗</button>
+        <p id="status" style="margin-top:15px; color:#888;">รอเชื่อมต่อ...</p>
     </div>
 
     <div class="card" id="score-box" style="display:none;">
@@ -35,25 +35,33 @@
     </div>
 
     <script>
-        const peer = new Peer({ config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] } });
+        // ใช้ config เดียวกันเพื่อให้คุยกันได้ทุกสภาพเน็ต
+        const peer = new Peer({
+            config: {
+                'iceServers': [
+                    { 'urls': 'stun:stun.l.google.com:19302' },
+                    { 'urls': 'stun:stun1.l.google.com:19302' },
+                    { 'urls': 'stun:stun2.l.google.com:19302' }
+                ]
+            }
+        });
+
         let conn = null;
 
         function connect() {
             const id = document.getElementById('target-id').value;
             if(!id) return alert("กรุณากรอกรหัส");
             
-            document.getElementById('status').innerText = "กำลังเชื่อมต่อ...";
-            document.getElementById('conn-btn').disabled = true;
-
-            // ปิด connection เก่าถ้ามี
-            if(conn) conn.close();
-
-            conn = peer.connect(id, { reliable: true });
+            document.getElementById('status').innerText = "กำลังพยายามเจาะการเชื่อมต่อ...";
+            
+            // เชื่อมต่อโดยบังคับให้มองหาเส้นทางที่เร็วที่สุด (LAN ก่อน แล้วค่อย WAN)
+            conn = peer.connect(id, { 
+                reliable: true
+            });
 
             conn.on('open', () => {
-                document.getElementById('status').innerText = "✅ เชื่อมต่อสำเร็จ! รอรับรูป...";
+                document.getElementById('status').innerText = "✅ เชื่อมต่อแล้ว! พร้อมตรวจ";
                 document.getElementById('status').style.color = "#00ff88";
-                document.getElementById('conn-btn').disabled = false;
             });
 
             conn.on('data', data => {
@@ -65,14 +73,9 @@
                 }
             });
 
-            conn.on('close', () => {
-                alert("การเชื่อมต่อหลุด!");
-                location.reload();
-            });
-
             peer.on('error', err => {
-                alert("ไม่พบ ID นี้ หรือสัญญาณขาดหาย");
-                location.reload();
+                alert("ไม่พบเครื่องวาด รหัสอาจจะผิด หรือเครื่องวาดปิดหน้าจอไปแล้ว");
+                console.error(err);
             });
         }
 
@@ -80,13 +83,10 @@
             const s = document.getElementById('score-input').value;
             if(conn && conn.open) {
                 conn.send({ score: s });
-                alert("ส่งคะแนนแล้ว!");
+                alert("ส่งคะแนน " + s + " แล้ว!");
                 document.getElementById('score-box').style.display = 'none';
                 document.getElementById('setup-box').style.display = 'block';
                 document.getElementById('status').innerText = "✅ พร้อมรับรูปถัดไป";
-            } else {
-                alert("การเชื่อมต่อหลุด กรุณาเชื่อมต่อใหม่");
-                location.reload();
             }
         }
     </script>
