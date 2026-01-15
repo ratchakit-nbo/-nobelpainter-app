@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Examiner - 4G Mode</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .card { background: #34495e; padding: 20px; border-radius: 20px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        input[type="text"] { padding: 15px; border-radius: 10px; border: none; width: 60%; font-size: 18px; margin-bottom: 10px; }
+        .btn-blue { background: #007bff; color: white; border: none; padding: 15px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .comp-view { display: flex; gap: 10px; margin: 20px 0; }
+        .art-box { flex: 1; background: white; padding: 5px; border-radius: 12px; color: #333; }
+        #user-img { width: 100%; border-radius: 10px; }
+        .score-input { background: #ecf0f1; padding: 20px; border-radius: 20px; color: #333; }
+        .btn-green { background: #27ae60; color: white; border: none; padding: 20px; border-radius: 15px; font-size: 20px; width: 100%; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>ผู้ตรวจ (4G Tablet)</h2>
+        <div id="connect-area">
+            <input type="text" id="pc-id" placeholder="ID จากเครื่อง WiFi">
+            <button class="btn-blue" onclick="connectToPC()">เชื่อมต่อข้ามเครือข่าย</button>
+        </div>
+
+        <div id="main-ui" style="display:none;">
+            <div class="comp-view">
+                <div class="art-box"><small>ต้นแบบ</small><div id="temp-char" style="font-size:80px;"></div></div>
+                <div class="art-box"><small>ที่วาดมา</small><img id="user-img"></div>
+            </div>
+            <div class="score-input">
+                <label>คะแนน (0-100)</label><br>
+                <input type="number" id="score-input" value="90" style="font-size:40px; width:100px; text-align:center;">
+                <button class="btn-green" onclick="sendScore()">ส่งคะแนนกลับไป 🚀</button>
+            </div>
+        </div>
+        <p id="status-msg" style="display:none; color:#bdc3c7;">⏳ เชื่อมต่อแล้ว รอรับรูปภาพจาก WiFi...</p>
+    </div>
+
+    <script>
+        // เพิ่มการตั้งค่าเพื่อรองรับข้ามเน็ตเวิร์ก (4G <-> WiFi)
+        const peer = new Peer({
+            config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}
+        });
+
+        let conn = null;
+
+        function connectToPC() {
+            const id = document.getElementById('pc-id').value.trim();
+            if(!id) return alert("กรุณากรอก ID");
+            conn = peer.connect(id);
+            
+            conn.on('open', () => {
+                document.getElementById('connect-area').style.display = 'none';
+                document.getElementById('status-msg').style.display = 'block';
+            });
+
+            conn.on('data', data => {
+                if(data.image) {
+                    document.getElementById('user-img').src = data.image;
+                    document.getElementById('temp-char').innerText = data.char;
+                    document.getElementById('main-ui').style.display = 'block';
+                    document.getElementById('status-msg').style.display = 'none';
+                }
+            });
+        }
+
+        function sendScore() {
+            const s = document.getElementById('score-input').value;
+            if(conn && conn.open) {
+                conn.send({ score: s });
+                alert("ส่งคะแนนแล้ว!");
+                document.getElementById('main-ui').style.display = 'none';
+                document.getElementById('status-msg').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
