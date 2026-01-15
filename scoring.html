@@ -3,75 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examiner - Tablet 4G</title>
+    <title>Examiner - Tablet</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #2c3e50; color: white; text-align: center; padding: 10px; margin: 0; }
-        .card { background: #34495e; padding: 20px; border-radius: 15px; max-width: 500px; margin: 10px auto; }
-        input[type="text"], input[type="number"] { padding: 15px; border-radius: 10px; border: none; font-size: 18px; margin: 10px 0; width: 80%; }
-        button { padding: 15px; width: 85%; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .card { background: #34495e; padding: 20px; border-radius: 15px; max-width: 500px; margin: 10px auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        input[type="number"], input[type="text"] { padding: 15px; border-radius: 10px; border: none; font-size: 20px; margin: 10px 0; width: 80%; text-align: center; }
+        button { padding: 15px; width: 85%; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
         #view-area { display: none; }
-        img { width: 100%; background: white; border-radius: 10px; margin-top: 10px; }
+        img { width: 100%; background: white; border-radius: 10px; margin-top: 10px; border: 2px solid #fff; }
+        #msg { color: #bdc3c7; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h3>เครื่องผู้ตรวจ (4G)</h3>
+        <h3>เครื่องผู้ตรวจ (กรอกรหัส 6 หลัก)</h3>
         <div id="setup">
-            <input type="text" id="pc-id" placeholder="กรอก ID จากเครื่องวาด">
-            <button style="background: #007bff; color: white;" onclick="startConnect()">เชื่อมต่อ</button>
+            <input type="number" id="pc-id" placeholder="รหัสตัวเลข 6 หลัก" pattern="\d*">
+            <button style="background: #007bff; color: white;" onclick="startConnect()">เชื่อมต่อกับเครื่องวาด</button>
         </div>
 
         <div id="view-area">
-            <div id="target-char" style="font-size: 50px; background:white; color:#333; border-radius:10px;"></div>
+            <div id="target-char" style="font-size: 50px; background:white; color:#333; border-radius:10px; margin-bottom: 10px;"></div>
             <img id="received-img">
-            <input type="number" id="score" placeholder="คะแนน 0-100">
-            <button style="background: #27ae60; color: white;" onclick="submitScore()">ส่งคะแนนกลับไป 🚀</button>
+            <input type="number" id="score-input" placeholder="คะแนน 0-100">
+            <button style="background: #27ae60; color: white;" onclick="submitScore()">ส่งคะแนน 🚀</button>
         </div>
-        <p id="msg" style="color: #bdc3c7; margin-top: 15px;">สถานะ: พร้อมเชื่อมต่อ</p>
+        <p id="msg">สถานะ: รอการเชื่อมต่อ</p>
     </div>
 
     <script>
         const peer = new Peer({ config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] } });
         let conn = null;
 
-        // เชื่อมต่ออัตโนมัติถ้ามี ID ใน URL
-        window.onload = () => {
-            const idParam = new URLSearchParams(window.location.search).get('id');
-            if(idParam) {
-                document.getElementById('pc-id').value = idParam;
-                setTimeout(startConnect, 1500);
-            }
-        };
-
         function startConnect() {
-            const id = document.getElementById('pc-id').value.trim();
-            if(!id) return;
-            document.getElementById('msg').innerText = "กำลังเชื่อมต่อ...";
+            const id = document.getElementById('pc-id').value.toString().trim();
+            if(id.length < 6) return alert("กรุณากรอกรหัสให้ครบ 6 หลัก");
+            
+            document.getElementById('msg').innerText = "กำลังเชื่อมต่อกับรหัส: " + id + "...";
             conn = peer.connect(id);
 
             conn.on('open', () => {
                 document.getElementById('setup').style.display = 'none';
-                document.getElementById('msg').innerText = "เชื่อมต่อสำเร็จ! รอรับภาพ...";
+                document.getElementById('msg').innerText = "เชื่อมต่อสำเร็จ! รอรับภาพจากเครื่องวาด...";
             });
 
             conn.on('data', data => {
-                document.getElementById('received-img').src = data.img;
-                document.getElementById('target-char').innerText = "โจทย์: " + data.char;
-                document.getElementById('view-area').style.display = 'block';
-                document.getElementById('msg').style.display = 'none';
+                if(data.img) {
+                    document.getElementById('received-img').src = data.img;
+                    document.getElementById('target-char').innerText = "โจทย์: " + data.char;
+                    document.getElementById('view-area').style.display = 'block';
+                    document.getElementById('msg').style.display = 'none';
+                }
+            });
+
+            conn.on('error', err => {
+                alert("ไม่พบรหัสนั้น หรือเครื่องวาดปิดไปแล้ว");
+                document.getElementById('msg').innerText = "การเชื่อมต่อผิดพลาด";
             });
         }
 
         function submitScore() {
-            const s = document.getElementById('score').value;
+            const s = document.getElementById('score-input').value;
+            if(!s) return alert("กรุณาใส่คะแนน");
             if(conn && conn.open) {
                 conn.send({ score: s });
                 alert("ส่งคะแนน " + s + " สำเร็จ!");
                 document.getElementById('view-area').style.display = 'none';
                 document.getElementById('msg').style.display = 'block';
-                document.getElementById('msg').innerText = "รอรับรูปถัดไป...";
+                document.getElementById('msg').innerText = "ส่งคะแนนแล้ว รอรับรูปถัดไป...";
+                document.getElementById('score-input').value = "";
             }
         }
     </script>
