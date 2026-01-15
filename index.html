@@ -2,109 +2,237 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painter PC - Auto Gen ID</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painter PC - Cloud Edition</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --primary: #007bff; --success: #28a745; --bg: #1a1a1a; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; text-align: center; }
-        #status-bar { background: #333; padding: 15px; border-bottom: 2px solid #444; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; }
-        .id-badge { background: var(--primary); padding: 8px 20px; border-radius: 10px; font-weight: bold; font-size: 1.5rem; letter-spacing: 3px; color: #fff; box-shadow: 0 0 10px rgba(0,123,255,0.5); }
-        #canvas-wrap { margin-top: 20px; position: relative; display: inline-block; }
-        canvas { background: white; cursor: crosshair; touch-action: none; box-shadow: 0 0 30px rgba(0,0,0,0.5); border-radius: 5px; }
-        .controls { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
-        select, button { padding: 10px 20px; border-radius: 8px; border: none; font-size: 16px; cursor: pointer; }
-        .btn-send { background: var(--success); color: white; width: 600px; max-width: 90%; margin-top: 15px; font-size: 20px; font-weight: bold; display: none; }
+        :root { --bg: #1e1e1e; --panel: #2d2d30; --border: #3f3f46; --accent: #007acc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        #ribbon { background: var(--panel); border-bottom: 1px solid var(--border); display: flex; padding: 10px; gap: 15px; overflow-x: auto; flex-shrink: 0; }
+        .group-box { border-right: 1px solid var(--border); padding: 0 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        .group-label { font-size: 11px; color: #888; margin-top: 5px; text-transform: uppercase; }
+        .btn { background: #3e3e42; border: 1px solid transparent; color: white; padding: 8px; border-radius: 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; min-width: 45px; margin: 2px; }
+        .btn:hover { background: #505050; }
+        .btn.active { background: var(--accent); border-color: #fff; }
+        .color-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+        .color-dot { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #111; cursor: pointer; }
+        #workspace { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 40px; background: #252526; position: relative; }
+        #canvas-holder { position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.6); line-height: 0; border-radius: 4px; overflow: hidden; }
+        canvas { background: white; touch-action: none; cursor: crosshair; }
+        #ref-box { position: absolute; top: 15px; left: 15px; width: 100px; height: 100px; background: white; border: 3px solid var(--accent); border-radius: 8px; display: none; justify-content: center; align-items: center; font-size: 60px; z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #btn-send { position: fixed; bottom: 30px; right: 30px; background: #2ea043; color: white; border: none; padding: 15px 35px; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; z-index: 10; }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">
-        <div>สถานะ: <b id="conn-status" style="color:#ffc107;">กำลังสร้างรหัส...</b></div>
-        <div>รหัสเชื่อมต่อ (6 หลัก): <span class="id-badge" id="my-id">------</span></div>
+    <div id="ribbon">
+        <div class="group-box">
+            <div style="color:var(--accent); font-weight:bold; font-size: 1.2rem;">ID: <span id="my-id">------</span></div>
+            <div id="conn-status" style="font-size:10px; color: #aaa;">รอเชื่อมต่อ (WiFi/4G)...</div>
+            <div class="group-label">System</div>
+        </div>
+        <div class="group-box">
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr);">
+                <button class="btn active" onclick="setMode('brush', this)">✏️</button>
+                <button class="btn" onclick="setMode('eraser', this)">🧽</button>
+                <button class="btn" onclick="setMode('fill', this)">🪣</button>
+                <button class="btn" onclick="undo()">↩️</button>
+                <button class="btn" onclick="clearCanvas()">🗑️</button>
+                <button class="btn" onclick="setMode('airbrush', this)">💨</button>
+            </div>
+            <div class="group-label">Tools</div>
+        </div>
+        <div class="group-box">
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr);">
+                <button class="btn" onclick="setMode('line', this)">╱</button>
+                <button class="btn" onclick="setMode('rect', this)">⬜</button>
+                <button class="btn" onclick="setMode('circle', this)">◯</button>
+                <button class="btn" onclick="setMode('star', this)">⭐</button>
+                <button class="btn" onclick="setMode('tri', this)">△</button>
+                <button class="btn" onclick="setMode('heart', this)">❤️</button>
+                <button class="btn" onclick="setMode('arrow', this)">➔</button>
+                <button class="btn" onclick="setMode('diamond', this)">💎</button>
+            </div>
+            <div class="group-label">Shapes</div>
+        </div>
+        <div class="group-box">
+            <select id="template-select" style="width:130px; padding:8px; background:#3e3e42; color:white; border:none; border-radius:4px;"></select>
+            <div class="group-label">Templates (100)</div>
+        </div>
+        <div class="group-box">
+            <div class="color-grid" id="palette"></div>
+            <div class="group-label">Colors</div>
+        </div>
     </div>
 
-    <div class="controls">
-        <select id="template">
-            <option value="">-- เลือกภาพต้นแบบ --</option>
-            <option value="🐶">สุนัข</option><option value="🐱">แมว</option><option value="🐰">กระต่าย</option>
-            <option value="🦊">จิ้งจอก</option><option value="🐼">แพนด้า</option><option value="🦁">สิงโต</option>
-        </select>
-        <button onclick="undo()">↩️ ย้อนกลับ</button>
-        <button onclick="clearCanvas()">🗑️ ล้างหน้าจอ</button>
+    <div id="workspace">
+        <div id="ref-box"></div>
+        <div id="canvas-holder">
+            <canvas id="paintCanvas"></canvas>
+        </div>
     </div>
 
-    <div id="canvas-wrap">
-        <canvas id="paintCanvas" width="600" height="600"></canvas>
-    </div>
-
-    <center><button class="btn-send" id="send-btn" onclick="sendData()">ส่งรูปภาพไปที่แท็บเล็ต 🚀</button></center>
+    <button id="btn-send" onclick="sendData()">ส่งรูปภาพ 🚀</button>
 
     <script>
-        const canvas = document.getElementById('paintCanvas'), ctx = canvas.getContext('2d');
-        let conn = null, drawing = false, undoStack = [];
+        const canvas = document.getElementById('paintCanvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const refBox = document.getElementById('ref-box');
+        let conn = null, drawing = false, mode = 'brush', undoStack = [], snapshot;
+        let startX, startY, currentColor = '#000000';
 
-        // ฟังก์ชันสุ่มตัวเลข 6 หลัก
-        const randomID = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const peer = new Peer(randomID, {
-            config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }, { 'urls': 'stun:stun1.l.google.com:19302' }] }
-        });
-
-        peer.on('open', id => {
-            document.getElementById('my-id').innerText = id;
-            document.getElementById('conn-status').innerText = "รอผู้ตรวจเชื่อมต่อ...";
-        });
-
-        peer.on('connection', c => {
-            conn = c;
-            document.getElementById('conn-status').innerText = "เชื่อมต่อสำเร็จ ✅";
-            document.getElementById('conn-status').style.color = "#28a745";
-            conn.on('data', data => { if(data.score) alert("ได้รับคะแนนแล้ว: " + data.score); });
-            conn.on('close', () => {
-                document.getElementById('conn-status').innerText = "การเชื่อมต่อหลุด ❌";
-                document.getElementById('conn-status').style.color = "#ff4d4d";
-            });
-        });
-
-        // ระบบวาด
-        ctx.fillStyle = "white"; ctx.fillRect(0,0,600,600);
-        saveState();
-
-        function getPos(e) {
-            const r = canvas.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-            return { x: clientX - r.left, y: clientY - r.top };
-        }
-
-        canvas.onmousedown = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
-        window.onmousemove = (e) => {
-            if(!drawing) return;
-            const p = getPos(e);
-            ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
-            ctx.lineTo(p.x, p.y); ctx.stroke();
-        };
-        window.onmouseup = () => { if(drawing) { drawing = false; saveState(); } };
-
-        document.getElementById('template').onchange = function() {
-            clearCanvas();
-            if(this.value) {
-                ctx.save(); ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="400px Arial";
-                ctx.fillStyle="rgba(0,0,0,0.05)"; ctx.fillText(this.value, 300, 300); ctx.restore();
-                document.getElementById('send-btn').style.display = 'block';
+        // Peer Config สำหรับใช้งานข้ามเครือข่าย (WiFi/4G)
+        const peerConfig = {
+            config: {
+                'iceServers': [
+                    { 'urls': 'stun:stun.l.google.com:19302' },
+                    { 'urls': 'stun:stun1.l.google.com:19302' },
+                    { 'urls': 'stun:stun2.l.google.com:19302' }
+                ]
             }
         };
 
-        function saveState() { undoStack.push(ctx.getImageData(0,0,600,600)); if(undoStack.length > 20) undoStack.shift(); }
+        const templates = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🐢","🐍","🦎","🦖","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐬","🐳","🦈","🐊","🐅","🐆","🦓","🦍","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦥","🦦","🦨","🦡","🐁","🐀","🐇","🐿️","🦔","🍄","🍎","🍌","🍉","🍇","🍓","🥭","🍍","🍔","🍕","🍦","🍰","🍩","🍪","🍫","🎨","🎭","🎮","🚀","🚁","🛸","🚗","🚲","🏠","☁️","☀️","🌈","🔥","💧","🍀","⭐"];
+        const tSelect = document.getElementById('template-select');
+        tSelect.innerHTML = '<option value="">-- เลือกภาพ --</option>';
+        templates.forEach((t, i) => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.innerText = `${i+1}. ${t}`;
+            tSelect.appendChild(opt);
+        });
+
+        const randomID = Math.floor(100000 + Math.random() * 900000).toString();
+        const peer = new Peer(randomID, peerConfig);
+        
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
+        peer.on('connection', c => {
+            conn = c;
+            document.getElementById('conn-status').innerText = "เชื่อมต่อสำเร็จ ✅";
+            document.getElementById('conn-status').style.color = "#4ade80";
+        });
+
+        const colors = ['#000000','#7f7f7f','#880015','#ed1c24','#ff7f27','#fff200','#22b14c','#00a2e8','#3f48cc','#a349a4','#ffffff','#c3c3c3','#b97a57','#ffaec9','#ffc90e','#efe4b0','#b5e61d','#99d9ea','#7092be','#c8bfe7'];
+        colors.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'color-dot'; div.style.background = c;
+            div.onclick = () => currentColor = c;
+            document.getElementById('palette').appendChild(div);
+        });
+
+        function initCanvas() {
+            canvas.width = 900;
+            canvas.height = 600;
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            saveState();
+        }
+        window.onload = initCanvas;
+
+        function setMode(m, btn) {
+            mode = m;
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+        }
+
+        tSelect.onchange = function() {
+            clearCanvas();
+            if(this.value) {
+                refBox.style.display = 'flex';
+                refBox.innerText = this.value;
+                ctx.save(); ctx.textAlign="center"; ctx.textBaseline="middle";
+                ctx.font = "400px Arial"; ctx.fillStyle = "rgba(0,0,0,0.05)";
+                ctx.fillText(this.value, canvas.width/2, canvas.height/2);
+                ctx.restore();
+            } else { refBox.style.display = 'none'; }
+        };
+
+        function getPos(e) {
+            const r = canvas.getBoundingClientRect();
+            const cx = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const cy = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            return { x: Math.floor(cx - r.left), y: Math.floor(cy - r.top) };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const p = getPos(e);
+            if(mode === 'fill') { handleFill(p.x, p.y); return; }
+            drawing = true; startX = p.x; startY = p.y;
+            ctx.strokeStyle = mode === 'eraser' ? 'white' : currentColor;
+            ctx.fillStyle = currentColor;
+            ctx.lineWidth = 5; ctx.lineCap = 'round';
+            snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            if(mode === 'brush' || mode === 'eraser') { ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!drawing) return;
+            const p = getPos(e);
+            if (mode === 'brush' || mode === 'eraser') { ctx.lineTo(p.x, p.y); ctx.stroke(); }
+            else if (mode === 'airbrush') { for(let i=0; i<8; i++) ctx.fillRect(p.x + Math.random()*20-10, p.y + Math.random()*20-10, 1, 1); }
+            else if (mode !== 'fill') {
+                ctx.putImageData(snapshot, 0, 0); ctx.beginPath();
+                if(mode === 'line') { ctx.moveTo(startX, startY); ctx.lineTo(p.x, p.y); }
+                else if(mode === 'rect') ctx.strokeRect(startX, startY, p.x-startX, p.y-startY);
+                else if(mode === 'circle') ctx.arc(startX, startY, Math.hypot(p.x-startX, p.y-startY), 0, Math.PI*2);
+                else if(mode === 'star') drawStar(startX, startY, Math.hypot(p.x-startX, p.y-startY));
+                ctx.stroke();
+            }
+        });
+
+        window.addEventListener('mouseup', () => { if(drawing) { drawing = false; saveState(); } });
+
+        function handleFill(x, y) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const targetColor = getPixel(imageData, x, y);
+            const fillColor = hexToRgb(currentColor);
+            if (colorsMatch(targetColor, fillColor)) return;
+            const stack = [[x, y]];
+            while (stack.length > 0) {
+                const [curX, curY] = stack.pop();
+                const curColor = getPixel(imageData, curX, curY);
+                if (colorsMatch(curColor, targetColor)) {
+                    setPixel(imageData, curX, curY, fillColor);
+                    if (curX > 0) stack.push([curX - 1, curY]);
+                    if (curX < canvas.width - 1) stack.push([curX + 1, curY]);
+                    if (curY > 0) stack.push([curX, curY - 1]);
+                    if (curY < canvas.height - 1) stack.push([curX, curY + 1]);
+                }
+            }
+            ctx.putImageData(imageData, 0, 0); saveState();
+        }
+
+        function getPixel(data, x, y) {
+            const i = (y * canvas.width + x) * 4;
+            return { r: data.data[i], g: data.data[i+1], b: data.data[i+2] };
+        }
+        function setPixel(data, x, y, c) {
+            const i = (y * canvas.width + x) * 4;
+            data.data[i] = c.r; data.data[i+1] = c.g; data.data[i+2] = c.b; data.data[i+3] = 255;
+        }
+        function colorsMatch(c1, c2) { return c1.r === c2.r && c1.g === c2.g && c1.b === c2.b; }
+        function hexToRgb(h) {
+            const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
+            return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : null;
+        }
+
+        function drawStar(cx, cy, r) {
+            let rot=Math.PI/2*3, step=Math.PI/5; ctx.moveTo(cx, cy-r);
+            for(let i=0; i<5; i++){
+                ctx.lineTo(cx+Math.cos(rot)*r, cy+Math.sin(rot)*r); rot+=step;
+                ctx.lineTo(cx+Math.cos(rot)*(r*0.4), cy+Math.sin(rot)*(r*0.4)); rot+=step;
+            }
+            ctx.closePath();
+        }
+
+        function clearCanvas() { ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height); saveState(); }
+        function saveState() { undoStack.push(ctx.getImageData(0,0,canvas.width,canvas.height)); if(undoStack.length > 20) undoStack.shift(); }
         function undo() { if(undoStack.length > 1) { undoStack.pop(); ctx.putImageData(undoStack[undoStack.length-1], 0,0); } }
-        function clearCanvas() { ctx.fillStyle = "white"; ctx.fillRect(0,0,600,600); document.getElementById('template').onchange(); }
 
         function sendData() {
             if(conn && conn.open) {
-                conn.send({ img: canvas.toDataURL('image/jpeg', 0.5), char: document.getElementById('template').value });
+                conn.send({ img: canvas.toDataURL('image/jpeg', 0.6), char: tSelect.value || "วาดภาพ" });
                 alert("ส่งรูปภาพแล้ว!");
-            } else { alert("ยังไม่ได้เชื่อมต่อกับแท็บเล็ต!"); }
+            } else alert("ยังไม่ได้เชื่อมต่อ!");
         }
     </script>
 </body>
