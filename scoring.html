@@ -3,78 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examiner - Tablet</title>
+    <title>Examiner - โปรแกรมนี้สร้างโดย พ่อโนเบล</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #2c3e50; color: white; text-align: center; padding: 10px; margin: 0; }
-        .card { background: #34495e; padding: 20px; border-radius: 15px; max-width: 500px; margin: 10px auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        input[type="number"], input[type="text"] { padding: 15px; border-radius: 10px; border: none; font-size: 20px; margin: 10px 0; width: 80%; text-align: center; }
-        button { padding: 15px; width: 85%; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
-        #view-area { display: none; }
-        img { width: 100%; background: white; border-radius: 10px; margin-top: 10px; border: 2px solid #fff; }
-        #msg { color: #bdc3c7; margin-top: 15px; font-weight: bold; }
+        :root { --bg: #1a1a1a; --card: #2d2d30; --accent: #007acc; --success: #28a745; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* Header & Credit */
+        header { width: 100%; padding: 20px 0; text-align: center; background: var(--card); border-bottom: 2px solid var(--accent); margin-bottom: 20px; }
+        .credit { font-size: 1.2rem; font-weight: bold; color: #ffc107; text-shadow: 0 0 10px rgba(255,193,7,0.3); }
+        
+        .container { width: 95%; max-width: 600px; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* Setup Phase */
+        #setup-box { text-align: center; }
+        input[type="number"], input[type="text"] { width: 80%; padding: 15px; border-radius: 10px; border: 1px solid #444; background: #1e1e1e; color: white; font-size: 20px; text-align: center; margin-bottom: 15px; }
+        .btn-connect { width: 85%; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        
+        /* Result Phase */
+        #result-box { display: none; text-align: center; }
+        #received-img { width: 100%; background: white; border-radius: 10px; border: 3px solid #fff; margin: 15px 0; }
+        .task-label { font-size: 1.5rem; background: #444; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        
+        input#score-input { width: 60%; font-size: 30px; margin-top: 10px; border: 2px solid var(--success); }
+        .btn-submit { width: 85%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; margin-top: 10px; cursor: pointer; }
+        
+        #status-msg { margin-top: 20px; color: #aaa; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h3>เครื่องผู้ตรวจ (กรอกรหัส 6 หลัก)</h3>
-        <div id="setup">
-            <input type="number" id="pc-id" placeholder="รหัสตัวเลข 6 หลัก" pattern="\d*">
-            <button style="background: #007bff; color: white;" onclick="startConnect()">เชื่อมต่อกับเครื่องวาด</button>
+    <header>
+        <div class="credit">✨ โปรแกรมนี้สร้างโดย พ่อโนเบล ✨</div>
+    </header>
+
+    <div class="container">
+        <div id="setup-box">
+            <h2>เชื่อมต่อกับเครื่องวาด</h2>
+            <input type="number" id="pc-id" placeholder="กรอกรหัส 6 หลัก" pattern="\d*">
+            <button class="btn-connect" onclick="startConnect()">เริ่มการเชื่อมต่อ 🔗</button>
         </div>
 
-        <div id="view-area">
-            <div id="target-char" style="font-size: 50px; background:white; color:#333; border-radius:10px; margin-bottom: 10px;"></div>
-            <img id="received-img">
-            <input type="number" id="score-input" placeholder="คะแนน 0-100">
-            <button style="background: #27ae60; color: white;" onclick="submitScore()">ส่งคะแนน 🚀</button>
+        <div id="result-box">
+            <div class="task-label" id="target-char">โจทย์: -</div>
+            <img id="received-img" src="" alt="Drawing from Painter">
+            <p>กรุณาให้คะแนน (0-100)</p>
+            <input type="number" id="score-input" placeholder="100" min="0" max="100">
+            <button class="btn-submit" onclick="submitScore()">ส่งคะแนนกลับ 🚀</button>
         </div>
-        <p id="msg">สถานะ: รอการเชื่อมต่อ</p>
+
+        <div id="status-msg">สถานะ: รอการกรอกรหัส...</div>
     </div>
 
     <script>
-        const peer = new Peer({ config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] } });
+        const peer = new Peer({
+            config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] }
+        });
+        
         let conn = null;
 
         function startConnect() {
             const id = document.getElementById('pc-id').value.toString().trim();
-            if(id.length < 6) return alert("กรุณากรอกรหัสให้ครบ 6 หลัก");
+            if (id.length < 6) {
+                alert("กรุณากรอกรหัสให้ครบ 6 หลักครับ");
+                return;
+            }
+
+            document.getElementById('status-msg').innerText = "กำลังพยายามเชื่อมต่อกับ ID: " + id + "...";
             
-            document.getElementById('msg').innerText = "กำลังเชื่อมต่อกับรหัส: " + id + "...";
+            // เริ่มต้นการเชื่อมต่อ
             conn = peer.connect(id);
 
             conn.on('open', () => {
-                document.getElementById('setup').style.display = 'none';
-                document.getElementById('msg').innerText = "เชื่อมต่อสำเร็จ! รอรับภาพจากเครื่องวาด...";
+                document.getElementById('setup-box').style.display = 'none';
+                document.getElementById('result-box').style.display = 'none';
+                document.getElementById('status-msg').innerText = "เชื่อมต่อสำเร็จแล้ว ✅ รอรับรูปภาพจากเครื่องวาด...";
+                document.getElementById('status-msg').style.color = "#4ade80";
             });
 
+            // รับข้อมูลจากเครื่องวาด
             conn.on('data', data => {
-                if(data.img) {
+                if (data.img) {
                     document.getElementById('received-img').src = data.img;
-                    document.getElementById('target-char').innerText = "โจทย์: " + data.char;
-                    document.getElementById('view-area').style.display = 'block';
-                    document.getElementById('msg').style.display = 'none';
+                    document.getElementById('target-char').innerText = "โจทย์: " + (data.char || "วาดอิสระ");
+                    document.getElementById('result-box').style.display = 'block';
+                    document.getElementById('status-msg').style.display = 'none';
+                    
+                    // เลื่อนหน้าจอลงมาที่รูป (สำหรับมือถือ)
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                 }
             });
 
             conn.on('error', err => {
-                alert("ไม่พบรหัสนั้น หรือเครื่องวาดปิดไปแล้ว");
-                document.getElementById('msg').innerText = "การเชื่อมต่อผิดพลาด";
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาตรวจสอบรหัสอีกครั้ง");
+                document.getElementById('status-msg').innerText = "สถานะ: การเชื่อมต่อล้มเหลว";
+            });
+            
+            conn.on('close', () => {
+                alert("การเชื่อมต่อหลุด");
+                location.reload(); // รีโหลดหน้าเว็บเพื่อให้เริ่มใหม่ได้ง่าย
             });
         }
 
         function submitScore() {
-            const s = document.getElementById('score-input').value;
-            if(!s) return alert("กรุณาใส่คะแนน");
-            if(conn && conn.open) {
-                conn.send({ score: s });
-                alert("ส่งคะแนน " + s + " สำเร็จ!");
-                document.getElementById('view-area').style.display = 'none';
-                document.getElementById('msg').style.display = 'block';
-                document.getElementById('msg').innerText = "ส่งคะแนนแล้ว รอรับรูปถัดไป...";
+            const scoreValue = document.getElementById('score-input').value;
+            if (scoreValue === "") {
+                alert("กรุณาใส่คะแนนก่อนส่งครับ");
+                return;
+            }
+
+            if (conn && conn.open) {
+                conn.send({ score: scoreValue });
+                alert("ส่งคะแนน " + scoreValue + " เรียบร้อยแล้ว!");
+                
+                // ล้างหน้าจอรอรับรูปถัดไป
+                document.getElementById('result-box').style.display = 'none';
+                document.getElementById('status-msg').style.display = 'block';
+                document.getElementById('status-msg').innerText = "ส่งคะแนนแล้ว ✅ รอรับรูปถัดไป...";
                 document.getElementById('score-input').value = "";
+            } else {
+                alert("การเชื่อมต่อหลุด ไม่สามารถส่งคะแนนได้");
             }
         }
     </script>
