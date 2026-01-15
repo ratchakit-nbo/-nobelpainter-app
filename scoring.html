@@ -8,12 +8,12 @@
     <style>
         :root { --accent: #00f2fe; --bg: #0b101a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .card { width: 90%; max-width: 450px; background: #1a1f29; padding: 30px; border-radius: 25px; margin-top: 30px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { width: 90%; max-width: 450px; background: #1a1f29; padding: 30px; border-radius: 25px; margin-top: 30px; text-align: center; border: 1px solid #333; }
         input { width: 80%; padding: 15px; border-radius: 10px; border: none; font-size: 20px; text-align: center; margin-bottom: 15px; background: #0b0e14; color: white; border: 1px solid #333; }
         .btn { width: 85%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; }
         .btn-connect { background: #711cff; color: white; }
         .btn-send { background: var(--accent); color: #000; margin-top: 15px; }
-        #received-img { width: 100%; border: 3px solid white; border-radius: 10px; margin: 15px 0; background: white; }
+        #received-img { width: 100%; border: 3px solid white; border-radius: 10px; margin: 15px 0; background: white; max-height: 60vh; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -35,32 +35,18 @@
     </div>
 
     <script>
-        // ใช้ config เดียวกันเพื่อให้คุยกันได้ทุกสภาพเน็ต
-        const peer = new Peer({
-            config: {
-                'iceServers': [
-                    { 'urls': 'stun:stun.l.google.com:19302' },
-                    { 'urls': 'stun:stun1.l.google.com:19302' },
-                    { 'urls': 'stun:stun2.l.google.com:19302' }
-                ]
-            }
-        });
-
+        const peer = new Peer({ config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] } });
         let conn = null;
 
         function connect() {
             const id = document.getElementById('target-id').value;
             if(!id) return alert("กรุณากรอกรหัส");
-            
-            document.getElementById('status').innerText = "กำลังพยายามเจาะการเชื่อมต่อ...";
-            
-            // เชื่อมต่อโดยบังคับให้มองหาเส้นทางที่เร็วที่สุด (LAN ก่อน แล้วค่อย WAN)
-            conn = peer.connect(id, { 
-                reliable: true
-            });
+            document.getElementById('status').innerText = "กำลังเชื่อมต่อ...";
+            if(conn) conn.close();
+            conn = peer.connect(id, { reliable: true });
 
             conn.on('open', () => {
-                document.getElementById('status').innerText = "✅ เชื่อมต่อแล้ว! พร้อมตรวจ";
+                document.getElementById('status').innerText = "✅ เชื่อมต่อแล้ว! รอรับรูป...";
                 document.getElementById('status').style.color = "#00ff88";
             });
 
@@ -73,10 +59,7 @@
                 }
             });
 
-            peer.on('error', err => {
-                alert("ไม่พบเครื่องวาด รหัสอาจจะผิด หรือเครื่องวาดปิดหน้าจอไปแล้ว");
-                console.error(err);
-            });
+            peer.on('error', err => { alert("หาไม่เจอ หรือรหัสผิดครับ"); location.reload(); });
         }
 
         function sendScore() {
