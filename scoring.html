@@ -2,79 +2,77 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Examiner - 4G Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examiner - 4G Receiver</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        .card { background: #34495e; padding: 20px; border-radius: 20px; width: 100%; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        input[type="text"] { padding: 15px; border-radius: 10px; border: none; width: 60%; font-size: 18px; margin-bottom: 10px; }
-        .btn-blue { background: #007bff; color: white; border: none; padding: 15px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .comp-view { display: flex; gap: 10px; margin: 20px 0; }
-        .art-box { flex: 1; background: white; padding: 5px; border-radius: 12px; color: #333; }
-        #user-img { width: 100%; border-radius: 10px; }
-        .score-input { background: #ecf0f1; padding: 20px; border-radius: 20px; color: #333; }
-        .btn-green { background: #27ae60; color: white; border: none; padding: 20px; border-radius: 15px; font-size: 20px; width: 100%; font-weight: bold; cursor: pointer; }
+        body { font-family: sans-serif; background: #2c3e50; color: white; text-align: center; padding: 15px; }
+        .card { background: #34495e; padding: 20px; border-radius: 15px; max-width: 450px; margin: auto; }
+        input { padding: 15px; width: 80%; border-radius: 10px; border: none; font-size: 18px; margin: 10px 0; }
+        .btn-blue { background: #007bff; color: white; border: none; padding: 15px; width: 85%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #view-area { display: none; margin-top: 20px; }
+        img { width: 100%; background: white; border-radius: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>ผู้ตรวจ (4G Tablet)</h2>
-        <div id="connect-area">
-            <input type="text" id="pc-id" placeholder="ID จากเครื่อง WiFi">
-            <button class="btn-blue" onclick="connectToPC()">เชื่อมต่อข้ามเครือข่าย</button>
+        <h3>เครื่องผู้ตรวจ (4G)</h3>
+        <div id="setup">
+            <input type="text" id="pc-id" placeholder="กรอก ID จากเครื่องคอม">
+            <button class="btn-blue" onclick="startConnect()">เชื่อมต่อกับคอมพิวเตอร์</button>
+            <p id="msg" style="font-size: 12px; color: #bdc3c7; margin-top: 10px;">ถ้าเชื่อมต่อนานเกิน 10 วินาที ให้ลองรีเฟรชทั้งสองเครื่อง</p>
         </div>
 
-        <div id="main-ui" style="display:none;">
-            <div class="comp-view">
-                <div class="art-box"><small>ต้นแบบ</small><div id="temp-char" style="font-size:80px;"></div></div>
-                <div class="art-box"><small>ที่วาดมา</small><img id="user-img"></div>
-            </div>
-            <div class="score-input">
-                <label>คะแนน (0-100)</label><br>
-                <input type="number" id="score-input" value="90" style="font-size:40px; width:100px; text-align:center;">
-                <button class="btn-green" onclick="sendScore()">ส่งคะแนนกลับไป 🚀</button>
-            </div>
+        <div id="view-area">
+            <div id="char-display" style="font-size: 60px; background:white; color:#333; border-radius: 10px;"></div>
+            <img id="received-img">
+            <input type="number" id="score" placeholder="คะแนน 0-100" style="width: 50%; margin-top: 20px;">
+            <button class="btn-blue" style="background:#27ae60;" onclick="submitScore()">ส่งคะแนน 🚀</button>
         </div>
-        <p id="status-msg" style="display:none; color:#bdc3c7;">⏳ เชื่อมต่อแล้ว รอรับรูปภาพจาก WiFi...</p>
     </div>
 
     <script>
-        // เพิ่มการตั้งค่าเพื่อรองรับข้ามเน็ตเวิร์ก (4G <-> WiFi)
         const peer = new Peer({
-            config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}
+            config: {
+                'iceServers': [
+                    { 'urls': 'stun:stun.l.google.com:19302' },
+                    { 'urls': 'stun:stun1.l.google.com:19302' },
+                    { 'urls': 'stun:stun2.l.google.com:19302' }
+                ]
+            }
         });
 
         let conn = null;
 
-        function connectToPC() {
+        function startConnect() {
             const id = document.getElementById('pc-id').value.trim();
-            if(!id) return alert("กรุณากรอก ID");
-            conn = peer.connect(id);
+            if(!id) return;
             
+            document.getElementById('msg').innerText = "กำลังเชื่อมต่อผ่านเครือข่าย...";
+            conn = peer.connect(id);
+
             conn.on('open', () => {
-                document.getElementById('connect-area').style.display = 'none';
-                document.getElementById('status-msg').style.display = 'block';
+                document.getElementById('setup').style.display = 'none';
+                document.getElementById('msg').innerText = "เชื่อมต่อสำเร็จ! รอรับภาพ...";
             });
 
             conn.on('data', data => {
-                if(data.image) {
-                    document.getElementById('user-img').src = data.image;
-                    document.getElementById('temp-char').innerText = data.char;
-                    document.getElementById('main-ui').style.display = 'block';
-                    document.getElementById('status-msg').style.display = 'none';
-                }
+                document.getElementById('received-img').src = data.img;
+                document.getElementById('char-display').innerText = "วาดรูป: " + data.char;
+                document.getElementById('view-area').style.display = 'block';
+                document.getElementById('msg').style.display = 'none';
             });
         }
 
-        function sendScore() {
-            const s = document.getElementById('score-input').value;
+        function submitScore() {
+            const s = document.getElementById('score').value;
             if(conn && conn.open) {
                 conn.send({ score: s });
-                alert("ส่งคะแนนแล้ว!");
-                document.getElementById('main-ui').style.display = 'none';
-                document.getElementById('status-msg').style.display = 'block';
+                alert("ส่งคะแนนเรียบร้อย!");
+                document.getElementById('view-area').style.display = 'none';
+                document.getElementById('msg').style.display = 'block';
+                document.getElementById('msg').innerText = "รอรับภาพถัดไป...";
             }
         }
     </script>
