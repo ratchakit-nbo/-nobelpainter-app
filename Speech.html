@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thai Pronunciation Lab</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .setup-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .target-display {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 1.5rem 0;
+            min-height: 4rem;
+        }
+
+        .score-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 10px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-num { font-size: 2rem; font-weight: bold; }
+        .score-unit { font-size: 0.8rem; opacity: 0.7; }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-main:active { transform: scale(0.98); }
+        .btn-main:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+
+        .btn-set {
+            background: #475569;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .result-text {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f1f5f9;
+            border-radius: 10px;
+            font-style: italic;
+            color: #64748b;
+            min-height: 20px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-waiting { background: #e2e8f0; color: #475569; }
+        .status-listening { background: #dcfce7; color: #166534; animation: blink 1s infinite; }
+        .status-error { background: #fee2e2; color: #991b1b; }
+
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="setup-section">
+        <p style="margin-top:0; font-weight:bold;">1. กำหนดคำที่ต้องการ:</p>
+        <input type="text" id="wordInput" placeholder="พิมพ์คำหรือประโยค..." value="สวัสดี">
+        <button class="btn-set" onclick="updateTarget()">ตั้งค่า</button>
+    </div>
+
+    <p style="color: #64748b; margin-bottom: 0;">2. ฝึกออกเสียงคำนี้:</p>
+    <div class="target-display" id="targetWord">สวัสดี</div>
+    
+    <div class="score-circle" id="circle">
+        <div class="score-num" id="scoreDisplay">0%</div>
+        <div class="score-unit">ความถูกต้อง</div>
+    </div>
+
+    <button id="startBtn" class="btn-main">เริ่มพูดตอนนี้</button>
+    
+    <div id="statusBadge" class="status-badge status-waiting">สถานะ: พร้อมใช้งาน</div>
+    
+    <div class="result-text" id="transcript">รอฟังเสียงของคุณ...</div>
+</div>
+
+<script>
+    const wordInput = document.getElementById('wordInput');
+    const targetWord = document.getElementById('targetWord');
+    const startBtn = document.getElementById('startBtn');
+    const transcriptDisplay = document.getElementById('transcript');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const statusBadge = document.getElementById('statusBadge');
+    const circle = document.getElementById('circle');
+
+    // ฟังก์ชันเปลี่ยนคำเป้าหมาย
+    function updateTarget() {
+        const val = wordInput.value.trim();
+        if (val) {
+            targetWord.innerText = val;
+            resetUI();
+        }
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        statusBadge.innerHTML = "เบราว์เซอร์ไม่รองรับ";
+        statusBadge.className = "status-badge status-error";
+    } else {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'th-TH';
+        recognition.interimResults = false;
+
+        startBtn.onclick = () => {
+            try {
+                recognition.start();
+            } catch (e) {}
+        };
+
+        recognition.onstart = () => {
+            statusBadge.innerText = "กำลังฟัง...";
+            statusBadge.className = "status-badge status-listening";
+            startBtn.disabled = true;
+            transcriptDisplay.innerText = "พูดได้เลย...";
+        };
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[0][0].transcript;
+            transcriptDisplay.innerText = `คุณพูดว่า: "${spokenText}"`;
+            calculateScore(targetWord.innerText, spokenText);
+        };
+
+        recognition.onerror = (event) => {
+            statusBadge.innerText = "เกิดข้อผิดพลาด: " + event.error;
+            statusBadge.className = "status-badge status-error";
+            startBtn.disabled = false;
+        };
+
+        recognition.onend = () => {
+            startBtn.disabled = false;
+            if (statusBadge.className.includes("listening")) {
+                statusBadge.innerText = "ประมวลผลเสร็จแล้ว";
+                statusBadge.className = "status-badge status-waiting";
+            }
+        };
+    }
+
+    function resetUI() {
+        scoreDisplay.innerText = "0%";
+        circle.style.borderColor = "#f1f5f9";
+        circle.style.color = "#1e293b";
+        transcriptDisplay.innerText = "รอฟังเสียงของคุณ...";
+    }
+
+    function calculateScore(target, spoken) {
+        // ลบอักขระพิเศษและช่องว่างเพื่อเปรียบเทียบ
+        const cleanT = target.trim().toLowerCase();
+        const cleanS = spoken.trim().toLowerCase();
+
+        if (cleanT === cleanS) {
+            updateUI(100);
+            return;
+        }
+
+        // ใช้อัลกอริทึมเปรียบเทียบความคล้ายคลึงเบื้องต้น
+        const targetChars = Array.from(cleanT);
+        const spokenChars = Array.from(cleanS);
+        
+        let matches = 0;
+        const seen = new Array(spokenChars.length).fill(false);
+
+        targetChars.forEach(char => {
+            const foundIndex = spokenChars.findIndex((sChar, idx) => sChar === char && !seen[idx]);
+            if (foundIndex !== -1) {
+                matches++;
+                seen[foundIndex] = true;
+            }
+        });
+
+        const score = Math.round((matches / Math.max(targetChars.length, spokenChars.length)) * 100);
+        updateUI(score);
+    }
+
+    function updateUI(score) {
+        scoreDisplay.innerText = score + "%";
+        
+        if (score >= 80) {
+            circle.style.borderColor = "var(--success)";
+            circle.style.color = "var(--success)";
+        } else if (score >= 50) {
+            circle.style.borderColor = "var(--warning)";
+            circle.style.color = "var(--warning)";
+        } else {
+            circle.style.borderColor = "var(--danger)";
+            circle.style.color = "var(--danger)";
+        }
+    }
+</script>
+
+</body>
+</html>
