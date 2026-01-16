@@ -13,19 +13,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;800&display=swap');
         body { font-family: 'Kanit', sans-serif; overflow: hidden; position: fixed; width: 100%; height: 100%; }
-        
-        #canvas-wrapper { position: relative; width: 100%; height: calc(100vh - 300px); background: #fff; border-radius: 2rem; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        #canvas-wrapper { position: relative; width: 100%; height: calc(100vh - 350px); background: #fff; border-radius: 2rem; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
         canvas { width: 100% !important; height: 100% !important; touch-action: none; cursor: crosshair; }
-        
         #image-wrapper { width: 100%; height: calc(100vh - 320px); display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 2rem; }
         #received-image { max-width: 100%; max-height: 100%; object-fit: contain; }
-
         .hidden { display: none; }
         .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); }
-        
-        .color-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .color-dot.active { border-color: #4f46e5; transform: scale(1.2); }
-        
         .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -33,260 +28,178 @@
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
-
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        optgroup { font-weight: bold; color: #4f46e5; background: #f8fafc; }
     </style>
 </head>
 <body class="bg-slate-50">
 
     <div id="main-card" class="h-screen w-screen flex flex-col bg-white overflow-hidden relative">
-        <div class="gradient-bg p-4 text-white text-center shadow-lg">
-            <h1 class="text-xl font-black tracking-tighter uppercase">ทายไปวันๆ กับโนเบล</h1>
-            <p class="text-[10px] font-light opacity-80" id="status-display">By-พ่อโนเบล</p>
+        <div class="gradient-bg p-3 text-white text-center shadow-lg relative">
+            <h1 class="text-lg font-black tracking-tighter uppercase">ทายไปวันๆ กับโนเบล</h1>
+            <p class="text-[9px] font-light opacity-80" id="status-display">By-พ่อโนเบล</p>
+        </div>
+
+        <div class="px-4 pt-2">
+            <button onclick="window.location.href='https://ratchakit-nbo.github.io/-nobelpainter-app/game-nobel.html'" 
+                class="w-full bg-white border-2 border-indigo-100 text-indigo-600 font-bold py-2 rounded-2xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2 shadow-sm">
+                🏠 กลับหน้าเมนูหลัก
+            </button>
         </div>
 
         <div class="flex-1 p-4 flex flex-col overflow-hidden">
-            <div id="setup-section" class="my-auto space-y-8 animate__animated animate__fadeIn">
-                <div class="space-y-3 text-center">
-                    <label class="block text-sm font-bold text-slate-400 uppercase tracking-widest">รหัสห้องลับ</label>
-                    <input type="number" id="room-code" placeholder="0000" 
-                        class="w-3/4 p-5 bg-slate-50 border-2 border-slate-100 rounded-3xl text-4xl font-black text-center focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-inner">
+            <div id="setup-section" class="my-auto space-y-6 animate__animated animate__fadeIn">
+                <div class="space-y-2 text-center">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest">รหัสห้องลับ</label>
+                    <input type="number" id="room-code" placeholder="0000" class="w-3/4 p-4 bg-slate-50 border-2 border-slate-100 rounded-3xl text-3xl font-black text-center outline-none transition-all shadow-inner">
                 </div>
-                <div class="grid grid-cols-1 gap-4 px-6">
-                    <button onclick="initPeer('drawer')" class="bg-indigo-600 text-white font-bold py-5 rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-95 transition-all text-xl">ฉันจะวาด</button>
-                    <button onclick="initPeer('guesser')" class="bg-white border-2 border-indigo-100 text-indigo-600 font-bold py-5 rounded-3xl hover:bg-slate-50 active:scale-95 transition-all text-xl">ฉันจะทาย</button>
+                <div class="grid grid-cols-1 gap-3 px-6">
+                    <button onclick="initPeer('drawer')" class="bg-indigo-600 text-white font-bold py-4 rounded-3xl shadow-xl active:scale-95 transition-all text-lg">ฉันจะวาด</button>
+                    <button onclick="initPeer('guesser')" class="bg-white border-2 border-indigo-100 text-indigo-600 font-bold py-4 rounded-3xl active:scale-95 transition-all text-lg">ฉันจะทาย</button>
                 </div>
             </div>
 
             <div id="drawer-section" class="hidden h-full flex flex-col space-y-3">
-                <div class="flex items-center justify-between bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
-                    <select id="target-word" class="bg-transparent font-black text-indigo-700 text-lg outline-none flex-1 mr-2"></select>
-                    <div id="drawer-feedback" class="px-3 py-1 rounded-full bg-white text-slate-400 text-[10px] font-bold uppercase shadow-sm shrink-0">รอคนทายเชื่อมต่อ...</div>
+                <div class="flex items-center justify-between bg-indigo-50 p-2 rounded-2xl border border-indigo-100">
+                    <select id="target-word" class="bg-transparent font-black text-indigo-700 text-md outline-none flex-1 mr-2"></select>
+                    <div id="drawer-feedback" class="px-3 py-1 rounded-full bg-white text-slate-400 text-[10px] font-bold uppercase shadow-sm">รอคนทาย...</div>
                 </div>
-
                 <div class="flex items-center justify-between bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                     <div class="flex gap-2">
                         <div class="color-dot active bg-black" onclick="setColor('#000000', this)"></div>
-                        <div class="color-dot bg-red-500" onclick="setColor('#ef4444', this)"></div >
+                        <div class="color-dot bg-red-500" onclick="setColor('#ef4444', this)"></div>
                         <div class="color-dot bg-blue-500" onclick="setColor('#3b82f6', this)"></div>
                         <div class="color-dot bg-green-500" onclick="setColor('#22c55e', this)"></div>
-                        <button onclick="setEraser(this)" class="w-[30px] h-[30px] bg-slate-100 rounded-full flex items-center justify-center text-[14px] border-2 border-transparent" id="eraser-btn">🧽</button>
+                        <button onclick="setEraser(this)" class="w-[28px] h-[28px] bg-slate-100 rounded-full flex items-center justify-center text-[12px]" id="eraser-btn">🧽</button>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-slate-400">ขนาด:</span>
-                        <select id="brush-size" class="bg-slate-100 rounded-lg text-xs font-bold p-1 outline-none" onchange="setSize(this.value)">
-                            <option value="4">เล็ก</option>
-                            <option value="8" selected>กลาง</option>
-                            <option value="16">ใหญ่</option>
-                        </select>
-                    </div>
+                    <select id="brush-size" class="bg-slate-100 rounded-lg text-[10px] font-bold p-1 outline-none" onchange="setSize(this.value)">
+                        <option value="4">เล็ก</option><option value="8" selected>กลาง</option><option value="16">ใหญ่</option>
+                    </select>
                 </div>
-
-                <div id="canvas-wrapper" class="border-4 border-slate-100">
-                    <canvas id="paintCanvas"></canvas>
-                </div>
+                <div id="canvas-wrapper" class="border-4 border-slate-100"><canvas id="paintCanvas"></canvas></div>
                 <div class="grid grid-cols-2 gap-3 pb-2">
-                    <button onclick="clearCanvas()" class="bg-slate-100 text-slate-500 font-bold py-4 rounded-2xl">ล้าง</button>
-                    <button id="send-btn" onclick="sendData()" class="bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all">ส่งภาพให้คนทาย</button>
+                    <button onclick="clearCanvas()" class="bg-slate-100 text-slate-500 font-bold py-3 rounded-2xl">ล้าง</button>
+                    <button onclick="sendData()" class="bg-indigo-600 text-white font-bold py-3 rounded-2xl shadow-lg">ส่งภาพ</button>
                 </div>
             </div>
 
             <div id="guesser-section" class="hidden h-full flex flex-col space-y-3 text-center">
                 <div id="image-wrapper" class="relative border-4 border-slate-100 p-2 shadow-inner">
                     <img id="received-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-                    <div id="wait-msg" class="absolute inset-0 flex items-center justify-center text-slate-300 font-bold animate-pulse">รอคนวาดส่งภาพ...</div>
+                    <div id="wait-msg" class="absolute inset-0 flex items-center justify-center text-slate-300 font-bold animate-pulse">รอรูปภาพ...</div>
                 </div>
-                <div id="answer-buttons" class="grid grid-cols-2 gap-3 flex-1 pt-2 pb-2 no-scrollbar overflow-hidden"></div>
+                <div id="answer-buttons" class="grid grid-cols-2 gap-3 flex-1 pt-1 pb-1 no-scrollbar overflow-hidden"></div>
             </div>
-        </div>
-
-        <div class="text-center p-2 border-t border-slate-50">
-             <p class="text-xs font-black text-slate-300">ทายไปวันๆ กับโนเบล - By-พ่อโนเบล</p>
         </div>
     </div>
 
     <script>
         const wordBank = {
-            "สัตว์ 🐾": ["หมี 🐻", "เสือ 🐯", "กระต่าย 🐰", "แมว 🐱", "สุนัข 🐶", "ช้าง 🐘", "ม้า 🐴", "ลิง 🐒", "ไก่ 🐔", "เป็ด 🦆", "หมู 🐷", "วัว 🐮", "งู 🐍", "นก 🐦", "แพนด้า 🐼", "สิงโต 🦁"],
-            "ของกิน 🍎": ["แอปเปิ้ล 🍎", "กล้วย 🍌", "พิซซ่า 🍕", "เค้ก 🍰", "โดนัท 🍩", "ไข่ดาว 🍳"],
-            "สิ่งของ 🏠": ["บ้าน 🏠", "รถยนต์ 🚗", "จักรยาน 🚲", "โทรศัพท์ 📱", "ร่ม ☂️", "แว่นตา 👓", "ลูกบอล ⚽"],
-            "ธรรมชาติ 🌳": ["พระอาทิตย์ ☀️", "พระจันทร์ 🌙", "สายรุ้ง 🌈", "ทะเล 🌊", "ไฟ 🔥"],
-            "ตัวอักษร 🔡": ["A", "B", "C", "1", "2", "3", "ก", "ข", "ค"]
+            "สัตว์ 🐾": ["หมี 🐻", "เสือ 🐯", "กระต่าย 🐰", "แมว 🐱", "สุนัข 🐶", "ช้าง 🐘", "ม้า 🐴", "ลิง 🐒", "ไก่ 🐔", "เป็ด 🦆", "หมู 🐷", "วัว 🐮", "งู 🐍", "นก 🐦", "แพนด้า 🐼", "สิงโต 🦁", "ยีราฟ 🦒", "เพนกวิน 🐧", "ฉลาม 🦈", "นกฮูก 🦉"],
+            "ดอกไม้/พืช 🌸": ["กุหลาบ 🌹", "ทานตะวัน 🌻", "ชบา 🌺", "มะลิ 🌼", "ดอกบัว 🪷", "ทิวลิป 🌷", "ต้นไม้ 🌳", "กระบองเพชร 🌵", "เห็ด 🍄"],
+            "ของกิน 🍎": ["แอปเปิ้ล 🍎", "กล้วย 🍌", "ส้ม 🍊", "องุ่น 🍇", "แตงโม 🍉", "สับปะรด 🍍", "พิซซ่า 🍕", "ไอศกรีม 🍦", "เค้ก 🍰", "โดนัท 🍩", "ไข่ดาว 🍳", "แฮมเบอร์เกอร์ 🍔"],
+            "สิ่งของ 🏠": ["บ้าน 🏠", "รถยนต์ 🚗", "จักรยาน 🚲", "เครื่องบิน ✈️", "เรือ 🚢", "โทรศัพท์ 📱", "คอมพิวเตอร์ 💻", "โทรทัศน์ 📺", "หนังสือ 📖", "ร่ม ☂️", "แว่นตา 👓", "นาฬิกา ⌚", "ลูกบอล ⚽", "กีตาร์ 🎸"],
+            "ธรรมชาติ 🌳": ["พระอาทิตย์ ☀️", "พระจันทร์ 🌙", "ดวงดาว ⭐", "เมฆ ☁️", "ฝน 🌧️", "สายรุ้ง 🌈", "ทะเล 🌊", "ไฟ 🔥"],
+            "อักษร/ตัวเลข 🔡": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "ก", "ข", "ค", "ง", "จ", "ฉ", "ช", "ด", "ต", "น", "บ", "ป", "ผ", "ฝ", "ม", "ย", "ร", "ล", "ว", "ส", "ห", "อ"]
         };
-
         const allWordsFlat = Object.values(wordBank).flat();
+        let peer, conn, myRole;
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
-        let painting = false;
-        let currentBrushColor = '#000000';
-        let currentBrushSize = 8;
-        let isEraser = false;
-        let peer, conn, myRole;
+        let painting = false, currentBrushColor = '#000000', currentBrushSize = 8, isEraser = false;
 
         function initPeer(role) {
             const roomCode = document.getElementById('room-code').value;
-            if (!roomCode || roomCode.length < 3) return Swal.fire('กรุณาใส่รหัสห้อง 3 หลักขึ้นไป');
-            
+            if (!roomCode || roomCode.length < 3) return Swal.fire('ใส่รหัสห้อง 3 หลักขึ้นไป');
             myRole = role;
             const peerId = (role === 'drawer' ? 'NOBEL-D-' : 'NOBEL-G-') + roomCode;
             const targetId = (role === 'drawer' ? 'NOBEL-G-' : 'NOBEL-D-') + roomCode;
-
             peer = new Peer(peerId);
-
-            peer.on('open', (id) => {
+            peer.on('open', () => {
                 document.getElementById('setup-section').classList.add('hidden');
                 document.getElementById(role + '-section').classList.remove('hidden');
                 document.getElementById('status-display').innerText = `ห้อง: ${roomCode} | คุณคือ: ${role === 'drawer' ? 'คนวาด' : 'คนทาย'}`;
-
                 if (role === 'drawer') {
-                    populateWordSelect();
-                    setTimeout(resizeCanvas, 100);
-                    peer.on('connection', (c) => {
-                        conn = c;
-                        setupConn();
-                        document.getElementById('drawer-feedback').innerText = "คนทายเชื่อมต่อแล้ว! ✅";
-                        document.getElementById('drawer-feedback').classList.add('text-green-600');
-                    });
-                } else {
-                    conn = peer.connect(targetId);
-                    setupConn();
-                }
-            });
-
-            peer.on('error', (err) => {
-                Swal.fire('เชื่อมต่อล้มเหลว', 'รหัสห้องอาจซ้ำหรือผิดพลาด ลองเปลี่ยนรหัสดูนะครับ', 'error');
+                    populateWordSelect(); setTimeout(resizeCanvas, 100);
+                    peer.on('connection', (c) => { conn = c; setupConn(); document.getElementById('drawer-feedback').innerText = "เชื่อมต่อแล้ว! ✅"; });
+                } else { conn = peer.connect(targetId); setupConn(); }
             });
         }
 
         function setupConn() {
             conn.on('data', (data) => {
-                if (data.type === 'image') {
+                // ฝั่งคนทายรับภาพ
+                if (data.type === 'image' && myRole === 'guesser') {
                     document.getElementById('received-image').src = data.img;
                     document.getElementById('wait-msg').classList.add('hidden');
                     createButtons(data.ans);
-                } else if (data.type === 'result') {
+                } 
+                // ฝั่งคนวาดรับผลลัพธ์จากคนทาย
+                else if (data.type === 'result' && myRole === 'drawer') {
                     if (data.status === 'correct') {
                         confetti({ particleCount: 150, spread: 100 });
-                        Swal.fire('คนทายตอบถูก!', `คำเฉลย: ${data.ans}`, 'success');
+                        Swal.fire({ title: 'คนทายตอบถูกแล้ว!', text: `คุณวาดได้เหมือน : ${data.ans}`, icon: 'success' });
                     } else {
-                        Swal.fire({title: 'คนทายตอบผิด!', icon: 'error', toast: true, position: 'top', timer: 2000});
+                        Swal.fire({ title: 'คนทายตอบผิด!', icon: 'error', toast: true, position: 'top', timer: 2000 });
                     }
                 }
             });
         }
 
         function sendData() {
-            if (!conn) return Swal.fire('รอคนทายเข้าห้องก่อนนะครับ');
-            conn.send({
-                type: 'image',
-                img: canvas.toDataURL('image/png', 0.5),
-                ans: document.getElementById('target-word').value
-            });
-            Swal.fire({ title: 'ส่งภาพแล้ว!', icon: 'success', toast: true, position: 'top-end', timer: 1500 });
+            if (!conn) return Swal.fire('รอคนทายเชื่อมต่อก่อนครับ');
+            conn.send({ type: 'image', img: canvas.toDataURL('image/png', 0.5), ans: document.getElementById('target-word').value });
+            Swal.fire({ title: 'ส่งแล้ว!', icon: 'success', toast: true, position: 'top-end', timer: 1000 });
         }
 
         function createButtons(correct) {
             const container = document.getElementById('answer-buttons');
             container.innerHTML = "";
             let choices = allWordsFlat.filter(w => w !== correct).sort(() => 0.5 - Math.random()).slice(0, 3);
-            choices.push(correct);
-            choices.sort(() => 0.5 - Math.random());
-
+            choices.push(correct); choices.sort(() => 0.5 - Math.random());
             choices.forEach(choice => {
                 const btn = document.createElement('button');
-                btn.className = "bg-slate-50 border-2 border-slate-100 h-full rounded-3xl font-black text-lg text-slate-600 active:scale-95 transition-all";
+                btn.className = "bg-slate-50 border-2 border-slate-100 h-full rounded-3xl font-black text-md flex items-center justify-center active:scale-95";
                 btn.innerText = choice;
                 btn.onclick = () => {
                     if (choice === correct) {
                         confetti({ particleCount: 150, spread: 100 });
-                        Swal.fire('ถูกต้อง!', '', 'success');
-                        conn.send({ type: 'result', status: 'correct', ans: correct });
+                        Swal.fire('ถูกต้อง!', `มันคือ "${choice}"`, 'success'); // Popup ฝั่งคนทาย
+                        conn.send({ type: 'result', status: 'correct', ans: correct }); // ส่งไปบอกคนวาด
                     } else {
                         document.getElementById('main-card').classList.add('shake');
                         setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 500);
-                        conn.send({ type: 'result', status: 'wrong' });
+                        Swal.fire({ title: 'ผิดจ้า!', icon: 'error', timer: 2000 }); // Popup ฝั่งคนทาย
+                        conn.send({ type: 'result', status: 'wrong' }); // ส่งไปบอกคนวาด
                     }
                 };
                 container.appendChild(btn);
             });
         }
 
-        // Drawing Functions
-        function resizeCanvas() {
-            const wrapper = document.getElementById('canvas-wrapper');
-            if (wrapper) {
-                canvas.width = wrapper.clientWidth;
-                canvas.height = wrapper.clientHeight;
-                ctx.lineCap = 'round';
+        // Canvas & UI Logics
+        function resizeCanvas() { const w = document.getElementById('canvas-wrapper'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.lineCap = 'round'; }
+        function setColor(c, el) { isEraser = false; currentBrushColor = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
+        function setEraser(el) { isEraser = true; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
+        function setSize(s) { currentBrushSize = s; }
+        function getCoords(e) { const r = canvas.getBoundingClientRect(); const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY; return { x: x - r.left, y: y - r.top }; }
+        function draw(e) { if (!painting) return; const c = getCoords(e); ctx.lineWidth = currentBrushSize; ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over'; ctx.strokeStyle = currentBrushColor; ctx.lineTo(c.x, c.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(c.x, c.y); }
+        canvas.addEventListener('mousedown', (e) => { painting = true; draw(e); });
+        canvas.addEventListener('mouseup', () => { painting = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); painting = true; draw(e); });
+        canvas.addEventListener('touchend', () => { painting = false; ctx.beginPath(); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function populateWordSelect() {
+            const s = document.getElementById('target-word');
+            for (const [cat, words] of Object.entries(wordBank)) {
+                const g = document.createElement('optgroup'); g.label = cat;
+                words.forEach(w => { const o = document.createElement('option'); o.value = o.innerText = w; g.appendChild(o); });
+                s.appendChild(g);
             }
         }
         window.addEventListener('resize', resizeCanvas);
-
-        function setColor(color, el) {
-            isEraser = false;
-            currentBrushColor = color;
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-            document.getElementById('eraser-btn').classList.remove('active', 'border-indigo-500');
-            el.classList.add('active');
-        }
-
-        function setEraser(el) {
-            isEraser = true;
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-            el.classList.add('active', 'border-indigo-500');
-        }
-
-        function setSize(size) { currentBrushSize = size; }
-
-        function getCoords(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        function startPainting(e) { painting = true; draw(e); }
-        function stopPainting() { painting = false; ctx.beginPath(); }
-
-        function draw(e) {
-            if (!painting) return;
-            const coords = getCoords(e);
-            ctx.lineWidth = currentBrushSize;
-            ctx.lineCap = 'round';
-            ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
-            ctx.strokeStyle = currentBrushColor;
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(coords.x, coords.y);
-        }
-
-        canvas.addEventListener('mousedown', startPainting);
-        canvas.addEventListener('mouseup', stopPainting);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPainting(e); });
-        canvas.addEventListener('touchend', stopPainting);
-        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
-
-        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
-        function populateWordSelect() {
-            const select = document.getElementById('target-word');
-            select.innerHTML = "";
-            for (const [category, words] of Object.entries(wordBank)) {
-                const group = document.createElement('optgroup');
-                group.label = category;
-                words.forEach(word => {
-                    const opt = document.createElement('option');
-                    opt.value = word;
-                    opt.innerText = word;
-                    group.appendChild(opt);
-                });
-                select.appendChild(group);
-            }
-        }
     </script>
 </body>
 </html>
