@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>เล่นอะไรดี กับโนเบล</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            --secondary-gradient: linear-gradient(135deg, #ff7675, #fab1a0);
+            --tertiary-gradient: linear-gradient(135deg, #00b894, #55efc4);
+            --bg-color: #f7f9fc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* ลบสีฟ้าเวลาคลิกบนมือถือ */
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* ป้องกันการเลื่อนหน้าจอไปมา */
+            background-color: var(--bg-color);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(#dfe6e9 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Container ปรับให้เต็มจอ */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 500px; /* จำกัดความกว้างบน PC แต่เต็มจอบนมือถือ */
+            background: white;
+            display: flex;
+            flex-direction: column;
+            padding: 40px 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .app-title {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #6c5ce7;
+            text-shadow: 2px 2px 0px #eee;
+        }
+
+        .app-subtitle {
+            font-size: 1rem;
+            color: #b2bec3;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .menu-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1; /* ดัน Footer ลงไปข้างล่าง */
+        }
+
+        .btn {
+            width: 100%;
+            padding: 25px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-1 { background: var(--primary-gradient); }
+        .btn-2 { background: var(--secondary-gradient); }
+        .btn-3 { background: var(--tertiary-gradient); }
+
+        .btn-emoji { font-size: 1.8rem; margin-right: 15px; }
+
+        /* Sub-menu */
+        .sub-menu-container {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: -10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 0 0 25px 25px;
+            border: 2px dashed #a29bfe;
+        }
+
+        .btn-sub {
+            padding: 15px;
+            background: white;
+            color: #6c5ce7;
+            border: 2px solid #6c5ce7;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            text-decoration: none;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .show { display: grid !important; }
+
+        footer {
+            text-align: center;
+            padding-top: 20px;
+            font-size: 1rem;
+            color: #636e72;
+            border-top: 1px solid #eee;
+        }
+
+        /* ปุ่มกดขยายเต็มจอ (Floating Button) */
+        #fs-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.1);
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="fs-btn" onclick="toggleFullScreen()">🔳 Fullscreen</button>
+
+    <div class="app-container">
+        <div class="header-section">
+            <h1 class="app-title">เล่นอะไรดี กับโนเบล</h1>
+            <p class="app-subtitle">By-พ่อโนเบล</p>
+        </div>
+        
+        <div class="menu-stack">
+            <div style="width: 100%;">
+                <button class="btn btn-1" onclick="toggleSub()">
+                    <span class="btn-emoji">🎨</span> เกมส์วาดภาพ
+                </button>
+                <div id="subMenu" class="sub-menu-container">
+                    <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/index.html" class="btn-sub">🖌️ เป็นคนวาดภาพ</a>
+                    <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/scoring.html" class="btn-sub">⭐ เป็นคนให้คะแนน</a>
+                </div>
+            </div>
+
+            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/nobelQ.html" class="btn btn-2">
+                <span class="btn-emoji">🧩</span> เกมส์ใบ้คำตอบ
+            </a>
+
+            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/Speech.html" class="btn btn-3">
+                <span class="btn-emoji">📢</span> ฝึกออกเสียง
+            </a>
+        </div>
+
+        <footer>
+            ขอให้สนุกนะเจ้าโนเบล! ❤️
+        </footer>
+    </div>
+
+    <script>
+        // ฟังก์ชันเปิด/ปิดเมนูย่อย
+        function toggleSub() {
+            document.getElementById('subMenu').classList.toggle('show');
+        }
+
+        // ฟังก์ชันบังคับขยายเต็มหน้าจอ
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // ทำให้กดแล้วขยายอัตโนมัติเมื่อมีการสัมผัสหน้าจอครั้งแรก (Browser Policy)
+        document.body.addEventListener('click', function() {
+            // toggleFullScreen(); // เปิดบรรทัดนี้หากต้องการให้คลิกตรงไหนก็ได้แล้วเต็มจอทันที
+        }, { once: true });
+    </script>
+
+</body>
+</html>
