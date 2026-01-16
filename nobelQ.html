@@ -7,13 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;800&display=swap');
         body { font-family: 'Kanit', sans-serif; overflow: hidden; position: fixed; width: 100%; height: 100%; }
         
-        /* ปรับความสูงพื้นที่วาดให้เหลือที่สำหรับ Toolbar */
         #canvas-wrapper { position: relative; width: 100%; height: calc(100vh - 300px); background: #fff; border-radius: 2rem; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
         canvas { width: 100% !important; height: 100% !important; touch-action: none; cursor: crosshair; }
         
@@ -44,34 +44,32 @@
     <div id="main-card" class="h-screen w-screen flex flex-col bg-white overflow-hidden relative">
         <div class="gradient-bg p-4 text-white text-center shadow-lg">
             <h1 class="text-xl font-black tracking-tighter uppercase">ทายไปวันๆ กับโนเบล</h1>
-            <p class="text-[10px] font-light opacity-80" id="status-text">By-พ่อโนเบล</p>
+            <p class="text-[10px] font-light opacity-80" id="status-display">By-พ่อโนเบล</p>
         </div>
-		<button class="bg-white border-2 border-indigo-100 text-indigo-600 font-bold py-5 rounded-3xl hover:bg-slate-50 active:scale-95 transition-all text-xl" onclick="window.location.href='https://ratchakit-nbo.github.io/-nobelpainter-app/game-nobel.html'">
-				🏠 กลับหน้าเมนูหลัก
-		</button>
+
         <div class="flex-1 p-4 flex flex-col overflow-hidden">
             <div id="setup-section" class="my-auto space-y-8 animate__animated animate__fadeIn">
                 <div class="space-y-3 text-center">
-                    <label class="block text-sm font-bold text-slate-400 uppercase tracking-widest">รหัสห้องเชื่อมต่อ</label>
+                    <label class="block text-sm font-bold text-slate-400 uppercase tracking-widest">รหัสห้องลับ</label>
                     <input type="number" id="room-code" placeholder="0000" 
                         class="w-3/4 p-5 bg-slate-50 border-2 border-slate-100 rounded-3xl text-4xl font-black text-center focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-inner">
                 </div>
                 <div class="grid grid-cols-1 gap-4 px-6">
-                    <button onclick="entryRole('drawer')" class="bg-indigo-600 text-white font-bold py-5 rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-95 transition-all text-xl">ฉันจะวาด</button>
-                    <button onclick="entryRole('guesser')" class="bg-white border-2 border-indigo-100 text-indigo-600 font-bold py-5 rounded-3xl hover:bg-slate-50 active:scale-95 transition-all text-xl">ฉันจะทาย</button>
+                    <button onclick="initPeer('drawer')" class="bg-indigo-600 text-white font-bold py-5 rounded-3xl shadow-xl hover:bg-indigo-700 active:scale-95 transition-all text-xl">ฉันจะวาด</button>
+                    <button onclick="initPeer('guesser')" class="bg-white border-2 border-indigo-100 text-indigo-600 font-bold py-5 rounded-3xl hover:bg-slate-50 active:scale-95 transition-all text-xl">ฉันจะทาย</button>
                 </div>
             </div>
 
             <div id="drawer-section" class="hidden h-full flex flex-col space-y-3">
                 <div class="flex items-center justify-between bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
                     <select id="target-word" class="bg-transparent font-black text-indigo-700 text-lg outline-none flex-1 mr-2"></select>
-                    <div id="drawer-feedback" class="px-3 py-1 rounded-full bg-white text-slate-400 text-[10px] font-bold uppercase shadow-sm shrink-0">รอส่งภาพ</div>
+                    <div id="drawer-feedback" class="px-3 py-1 rounded-full bg-white text-slate-400 text-[10px] font-bold uppercase shadow-sm shrink-0">รอคนทายเชื่อมต่อ...</div>
                 </div>
 
                 <div class="flex items-center justify-between bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
                     <div class="flex gap-2">
                         <div class="color-dot active bg-black" onclick="setColor('#000000', this)"></div>
-                        <div class="color-dot bg-red-500" onclick="setColor('#ef4444', this)"></div>
+                        <div class="color-dot bg-red-500" onclick="setColor('#ef4444', this)"></div >
                         <div class="color-dot bg-blue-500" onclick="setColor('#3b82f6', this)"></div>
                         <div class="color-dot bg-green-500" onclick="setColor('#22c55e', this)"></div>
                         <button onclick="setEraser(this)" class="w-[30px] h-[30px] bg-slate-100 rounded-full flex items-center justify-center text-[14px] border-2 border-transparent" id="eraser-btn">🧽</button>
@@ -90,15 +88,15 @@
                     <canvas id="paintCanvas"></canvas>
                 </div>
                 <div class="grid grid-cols-2 gap-3 pb-2">
-                    <button onclick="clearCanvas()" class="bg-slate-100 text-slate-500 font-bold py-4 rounded-2xl">ล้างทั้งหมด</button>
-                    <button onclick="sendToRoom()" class="bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all">ส่งภาพใหม่</button>
+                    <button onclick="clearCanvas()" class="bg-slate-100 text-slate-500 font-bold py-4 rounded-2xl">ล้าง</button>
+                    <button id="send-btn" onclick="sendData()" class="bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all">ส่งภาพให้คนทาย</button>
                 </div>
             </div>
 
             <div id="guesser-section" class="hidden h-full flex flex-col space-y-3 text-center">
                 <div id="image-wrapper" class="relative border-4 border-slate-100 p-2 shadow-inner">
                     <img id="received-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-                    <div id="wait-msg" class="absolute inset-0 flex items-center justify-center text-slate-300 font-bold animate-pulse">กำลังรอภาพ...</div>
+                    <div id="wait-msg" class="absolute inset-0 flex items-center justify-center text-slate-300 font-bold animate-pulse">รอคนวาดส่งภาพ...</div>
                 </div>
                 <div id="answer-buttons" class="grid grid-cols-2 gap-3 flex-1 pt-2 pb-2 no-scrollbar overflow-hidden"></div>
             </div>
@@ -111,36 +109,121 @@
 
     <script>
         const wordBank = {
-            "สัตว์ 🐾": ["หมี 🐻", "เสือ 🐯", "กระต่าย 🐰", "แมว 🐱", "สุนัข 🐶", "ช้าง 🐘", "ม้า 🐴", "ลิง 🐒", "ไก่ 🐔", "เป็ด 🦆", "หมู 🐷", "วัว 🐮", "งู 🐍", "จระเข้ 🐊", "เต่า 🐢", "ปลา 🐟", "กุ้ง 🦐", "ปู 🦀", "นก 🐦", "ผีเสื้อ 🦋", "มด 🐜", "ผึ้ง 🐝", "สิงโต 🦁", "ยีราฟ 🦒", "ค้างคาว 🦇", "แพนด้า 🐼", "กบ 🐸", "หนู 🐭", "แกะ 🐑", "เพนกวิน 🐧", "จิงโจ้ 🦘", "ฉลาม 🦈", "นกฮูก 🦉", "นกยูง 🦚"],
-            "ผลไม้และอาหาร 🍎": ["แอปเปิ้ล 🍎", "กล้วย 🍌", "ส้ม 🍊", "องุ่น 🍇", "แตงโม 🍉", "สับปะรด 🍍", "มะม่วง 🥭", "สตรอว์เบอร์รี่ 🍓", "มะพร้าว 🥥", "ทุเรียน 🍈", "มังคุด 🍆", "ลำไย 🍒", "พิซซ่า 🍕", "น่องไก่ 🍗", "ไอศกรีม 🍦", "เค้ก 🍰", "โดนัท 🍩", "ไข่ดาว 🍳"],
-            "สิ่งของ 🏠": ["บ้าน 🏠", "รถยนต์ 🚗", "จักรยาน 🚲", "เครื่องบิน ✈️", "เรือ 🚢", "โทรศัพท์ 📱", "คอมพิวเตอร์ 💻", "โทรทัศน์ 📺", "หนังสือ 📖", "ปากกา 🖊️", "โต๊ะ 🪑", "เตียง 🛌", "ร่ม ☂️", "แว่นตา 👓", "นาฬิกา ⌚", "กุญแจ 🔑", "กระเป๋า 🎒", "รองเท้า 👟", "หมวก 🧢", "พัดลม 🌀", "แก้วน้ำ 🥛", "จาน 🍽️", "ตะเกียบ 🥢", "กรรไกร ✂️", "ลูกบอล ⚽", "กีตาร์ 🎸", "กล้องถ่ายรูป 📷"],
-            "ธรรมชาติ 🌳": ["พระอาทิตย์ ☀️", "พระจันทร์ 🌙", "ดวงดาว ⭐", "เมฆ ☁️", "ฝน 🌧️", "ภูเขา ⛰️", "ต้นไม้ 🌳", "ดอกไม้ 🌸", "กุหลาบ 🌹", "ทานตะวัน 🌻", "สายรุ้ง 🌈", "ทะเล 🌊", "ภูเขาไฟ 🌋", "หิมะ ❄️", "ไฟ 🔥"],
-            "ตัวอักษร/ตัวเลข 🔡": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "ก", "ข", "ค", "ง", "จ", "ฉ", "ช", "ด", "ต", "น", "บ", "ป", "ผ", "ฝ", "ม", "ย", "ร", "ล", "ว", "ส", "ห", "อ"]
+            "สัตว์ 🐾": ["หมี 🐻", "เสือ 🐯", "กระต่าย 🐰", "แมว 🐱", "สุนัข 🐶", "ช้าง 🐘", "ม้า 🐴", "ลิง 🐒", "ไก่ 🐔", "เป็ด 🦆", "หมู 🐷", "วัว 🐮", "งู 🐍", "นก 🐦", "แพนด้า 🐼", "สิงโต 🦁"],
+            "ของกิน 🍎": ["แอปเปิ้ล 🍎", "กล้วย 🍌", "พิซซ่า 🍕", "เค้ก 🍰", "โดนัท 🍩", "ไข่ดาว 🍳"],
+            "สิ่งของ 🏠": ["บ้าน 🏠", "รถยนต์ 🚗", "จักรยาน 🚲", "โทรศัพท์ 📱", "ร่ม ☂️", "แว่นตา 👓", "ลูกบอล ⚽"],
+            "ธรรมชาติ 🌳": ["พระอาทิตย์ ☀️", "พระจันทร์ 🌙", "สายรุ้ง 🌈", "ทะเล 🌊", "ไฟ 🔥"],
+            "ตัวอักษร 🔡": ["A", "B", "C", "1", "2", "3", "ก", "ข", "ค"]
         };
 
         const allWordsFlat = Object.values(wordBank).flat();
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         let painting = false;
-        let roomCode = "";
-        let lastTimestamp = 0;
-        let lastGuessStatus = 'waiting';
         let currentBrushColor = '#000000';
         let currentBrushSize = 8;
         let isEraser = false;
+        let peer, conn, myRole;
 
+        function initPeer(role) {
+            const roomCode = document.getElementById('room-code').value;
+            if (!roomCode || roomCode.length < 3) return Swal.fire('กรุณาใส่รหัสห้อง 3 หลักขึ้นไป');
+            
+            myRole = role;
+            const peerId = (role === 'drawer' ? 'NOBEL-D-' : 'NOBEL-G-') + roomCode;
+            const targetId = (role === 'drawer' ? 'NOBEL-G-' : 'NOBEL-D-') + roomCode;
+
+            peer = new Peer(peerId);
+
+            peer.on('open', (id) => {
+                document.getElementById('setup-section').classList.add('hidden');
+                document.getElementById(role + '-section').classList.remove('hidden');
+                document.getElementById('status-display').innerText = `ห้อง: ${roomCode} | คุณคือ: ${role === 'drawer' ? 'คนวาด' : 'คนทาย'}`;
+
+                if (role === 'drawer') {
+                    populateWordSelect();
+                    setTimeout(resizeCanvas, 100);
+                    peer.on('connection', (c) => {
+                        conn = c;
+                        setupConn();
+                        document.getElementById('drawer-feedback').innerText = "คนทายเชื่อมต่อแล้ว! ✅";
+                        document.getElementById('drawer-feedback').classList.add('text-green-600');
+                    });
+                } else {
+                    conn = peer.connect(targetId);
+                    setupConn();
+                }
+            });
+
+            peer.on('error', (err) => {
+                Swal.fire('เชื่อมต่อล้มเหลว', 'รหัสห้องอาจซ้ำหรือผิดพลาด ลองเปลี่ยนรหัสดูนะครับ', 'error');
+            });
+        }
+
+        function setupConn() {
+            conn.on('data', (data) => {
+                if (data.type === 'image') {
+                    document.getElementById('received-image').src = data.img;
+                    document.getElementById('wait-msg').classList.add('hidden');
+                    createButtons(data.ans);
+                } else if (data.type === 'result') {
+                    if (data.status === 'correct') {
+                        confetti({ particleCount: 150, spread: 100 });
+                        Swal.fire('คนทายตอบถูก!', `คำเฉลย: ${data.ans}`, 'success');
+                    } else {
+                        Swal.fire({title: 'คนทายตอบผิด!', icon: 'error', toast: true, position: 'top', timer: 2000});
+                    }
+                }
+            });
+        }
+
+        function sendData() {
+            if (!conn) return Swal.fire('รอคนทายเข้าห้องก่อนนะครับ');
+            conn.send({
+                type: 'image',
+                img: canvas.toDataURL('image/png', 0.5),
+                ans: document.getElementById('target-word').value
+            });
+            Swal.fire({ title: 'ส่งภาพแล้ว!', icon: 'success', toast: true, position: 'top-end', timer: 1500 });
+        }
+
+        function createButtons(correct) {
+            const container = document.getElementById('answer-buttons');
+            container.innerHTML = "";
+            let choices = allWordsFlat.filter(w => w !== correct).sort(() => 0.5 - Math.random()).slice(0, 3);
+            choices.push(correct);
+            choices.sort(() => 0.5 - Math.random());
+
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = "bg-slate-50 border-2 border-slate-100 h-full rounded-3xl font-black text-lg text-slate-600 active:scale-95 transition-all";
+                btn.innerText = choice;
+                btn.onclick = () => {
+                    if (choice === correct) {
+                        confetti({ particleCount: 150, spread: 100 });
+                        Swal.fire('ถูกต้อง!', '', 'success');
+                        conn.send({ type: 'result', status: 'correct', ans: correct });
+                    } else {
+                        document.getElementById('main-card').classList.add('shake');
+                        setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 500);
+                        conn.send({ type: 'result', status: 'wrong' });
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Drawing Functions
         function resizeCanvas() {
             const wrapper = document.getElementById('canvas-wrapper');
             if (wrapper) {
                 canvas.width = wrapper.clientWidth;
                 canvas.height = wrapper.clientHeight;
                 ctx.lineCap = 'round';
-                ctx.lineWidth = currentBrushSize;
             }
         }
         window.addEventListener('resize', resizeCanvas);
 
-        // Drawing Functions
         function setColor(color, el) {
             isEraser = false;
             currentBrushColor = color;
@@ -155,9 +238,7 @@
             el.classList.add('active', 'border-indigo-500');
         }
 
-        function setSize(size) {
-            currentBrushSize = size;
-        }
+        function setSize(size) { currentBrushSize = size; }
 
         function getCoords(e) {
             const rect = canvas.getBoundingClientRect();
@@ -174,10 +255,8 @@
             const coords = getCoords(e);
             ctx.lineWidth = currentBrushSize;
             ctx.lineCap = 'round';
-            // ถ้านิ้วสไลด์เร็ว เส้นจะไม่ขาด
             ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
             ctx.strokeStyle = currentBrushColor;
-            
             ctx.lineTo(coords.x, coords.y);
             ctx.stroke();
             ctx.beginPath();
@@ -207,93 +286,6 @@
                 });
                 select.appendChild(group);
             }
-        }
-
-        function entryRole(role) {
-            roomCode = document.getElementById('room-code').value;
-            if (!roomCode) return Swal.fire({ title: 'กรุณาใส่รหัสห้อง!', icon: 'warning', timer: 3000 });
-            document.getElementById('setup-section').classList.add('hidden');
-            if (role === 'drawer') {
-                localStorage.removeItem('room_' + roomCode); 
-                lastGuessStatus = 'waiting'; 
-                populateWordSelect();
-                document.getElementById('drawer-section').classList.remove('hidden');
-                setTimeout(resizeCanvas, 100);
-                setInterval(checkFeedback, 1000);
-            } else {
-                document.getElementById('guesser-section').classList.remove('hidden');
-                setInterval(checkUpdate, 2000);
-            }
-        }
-
-        function sendToRoom() {
-            lastGuessStatus = 'waiting';
-            const data = {
-                img: canvas.toDataURL('image/png', 0.5),
-                ans: document.getElementById('target-word').value,
-                timestamp: Date.now(),
-                guessStatus: 'waiting'
-            };
-            localStorage.setItem('room_' + roomCode, JSON.stringify(data));
-            Swal.fire({ title: 'ส่งภาพแล้ว!', timer: 1500, showConfirmButton: false, icon: 'success', toast: true, position: 'top-end' });
-        }
-
-        function checkFeedback() {
-            const raw = localStorage.getItem('room_' + roomCode);
-            if (!raw) return;
-            const data = JSON.parse(raw);
-            const feedbackEl = document.getElementById('drawer-feedback');
-            if (data.guessStatus !== lastGuessStatus && data.guessStatus !== 'waiting') {
-                if (data.guessStatus === 'correct') {
-                    confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
-                    Swal.fire({ title: 'ทายถูกแล้ว!', text: `เฉลยคือ "${data.ans}"`, icon: 'success', timer: 6000, timerProgressBar: true });
-                    feedbackEl.innerText = "ทายถูกแล้ว! 🎉";
-                } else if (data.guessStatus === 'wrong') {
-                    Swal.fire({ title: 'ตอบผิดจ้า!', icon: 'error', timer: 3000, toast: true, position: 'top' });
-                    feedbackEl.innerText = "ทายผิด! ❌";
-                }
-                lastGuessStatus = data.guessStatus;
-            }
-        }
-
-        function checkUpdate() {
-            const raw = localStorage.getItem('room_' + roomCode);
-            if (!raw) return;
-            const data = JSON.parse(raw);
-            if (data.timestamp !== lastTimestamp) {
-                lastTimestamp = data.timestamp;
-                document.getElementById('received-image').src = data.img;
-                document.getElementById('wait-msg').classList.add('hidden');
-                createButtons(data.ans);
-            }
-        }
-
-        function createButtons(correct) {
-            const container = document.getElementById('answer-buttons');
-            container.innerHTML = "";
-            let choices = allWordsFlat.filter(w => w !== correct).sort(() => 0.5 - Math.random()).slice(0, 3);
-            choices.push(correct);
-            choices.sort(() => 0.5 - Math.random());
-            choices.forEach(choice => {
-                const btn = document.createElement('button');
-                btn.className = "bg-slate-50 border-2 border-slate-100 h-full rounded-3xl font-black text-lg text-slate-600 active:scale-95 transition-all shadow-sm flex items-center justify-center";
-                btn.innerText = choice;
-                btn.onclick = () => {
-                    const raw = JSON.parse(localStorage.getItem('room_' + roomCode));
-                    if (choice === correct) {
-                        confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
-                        Swal.fire({ title: 'ถูกต้อง!', text: `มันคือ "${choice}"`, icon: 'success', timer: 6000, timerProgressBar: true });
-                        raw.guessStatus = 'correct';
-                    } else {
-                        document.getElementById('main-card').classList.add('shake');
-                        setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 500);
-                        Swal.fire({ title: 'ผิดจ้า!', icon: 'error', timer: 4000, timerProgressBar: true });
-                        raw.guessStatus = 'wrong';
-                    }
-                    localStorage.setItem('room_' + roomCode, JSON.stringify(raw));
-                };
-                container.appendChild(btn);
-            });
         }
     </script>
 </body>
