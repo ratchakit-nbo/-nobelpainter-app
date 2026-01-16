@@ -6,11 +6,12 @@
     <title>Thai Pronunciation Lab - By พ่อโนเบล</title>
     <style>
         :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #f8fafc;
+            --primary: #ff781f; /* สีส้มหลัก */
+            --primary-dark: #e65c00;
+            --primary-light: #fff0e6;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --bg: #fff8f4;
         }
 
         body {
@@ -21,154 +22,186 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            color: #1e293b;
+            color: #44332a;
         }
 
         .container {
             background: white;
             padding: 2.5rem;
-            border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(255, 120, 31, 0.15);
             width: 100%;
             max-width: 450px;
             text-align: center;
-            position: relative;
+            border: 1px solid var(--primary-light);
         }
 
         .setup-section {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             padding-bottom: 1.5rem;
-            border-bottom: 2px solid #f1f5f9;
+            border-bottom: 2px dashed var(--primary-light);
         }
 
         input[type="text"] {
-            width: 70%;
+            width: 65%;
             padding: 12px 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
+            border: 2px solid #ffe0cc;
+            border-radius: 15px;
             font-size: 1rem;
             outline: none;
-            transition: all 0.2s;
+            transition: 0.2s;
         }
 
         input[type="text"]:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 8px rgba(255, 120, 31, 0.2);
         }
 
         .btn-set {
-            background: #475569;
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 18px;
-            border-radius: 12px;
+            padding: 12px 20px;
+            border-radius: 15px;
             margin-left: 5px;
             cursor: pointer;
             font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-set:hover { background: var(--primary-dark); }
+
+        .target-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 1.5rem 0;
         }
 
         .target-display {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             font-weight: 800;
-            color: var(--primary);
-            margin: 1.5rem 0;
-            min-height: 4rem;
+            color: var(--primary-dark);
             word-wrap: break-word;
+        }
+
+        .btn-speaker {
+            background: var(--primary-light);
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .btn-speaker:hover { 
+            background: var(--primary); 
+            color: white;
+            transform: scale(1.1) rotate(-10deg);
         }
 
         .score-circle {
             width: 140px;
             height: 140px;
             border-radius: 50%;
-            border: 10px solid #f1f5f9;
+            border: 10px solid #fff5ee;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             margin: 0 auto 1.5rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.5s;
+            background: #fff;
         }
 
-        .score-num { font-size: 2.2rem; font-weight: bold; }
-        .score-unit { font-size: 0.85rem; opacity: 0.7; }
+        .score-num { font-size: 2.4rem; font-weight: bold; }
+        .score-unit { font-size: 0.9rem; opacity: 0.8; }
 
         .btn-main {
-            background: var(--primary);
+            background: linear-gradient(135deg, #ff9d5c 0%, #ff781f 100%);
             color: white;
             border: none;
-            padding: 1.2rem 2.5rem;
-            border-radius: 50px;
-            font-size: 1.2rem;
+            padding: 1.2rem;
+            border-radius: 20px;
+            font-size: 1.3rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
-            transition: all 0.2s;
             width: 100%;
+            box-shadow: 0 8px 20px rgba(255, 120, 31, 0.3);
+            margin-bottom: 10px;
+            transition: 0.2s;
         }
 
-        .btn-main:hover { background: #4f46e5; }
-        .btn-main:active { transform: scale(0.98); }
-        .btn-main:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255, 120, 31, 0.4); }
+        .btn-main:active { transform: translateY(0); }
+        .btn-main:disabled { background: #eee; color: #aaa; cursor: not-allowed; box-shadow: none; }
 
         .result-text {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            margin-top: 1rem;
+            padding: 1.2rem;
+            background: var(--primary-light);
+            border-radius: 15px;
             font-style: italic;
-            color: #64748b;
-            min-height: 24px;
+            color: #8a6d5c;
+            border: 1px solid #ffe0cc;
         }
 
         .status-badge {
             display: inline-block;
-            margin-top: 1rem;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 5px;
         }
 
-        .status-waiting { background: #f1f5f9; color: #475569; }
-        .status-listening { background: #dcfce7; color: #166534; animation: blink 1s infinite; }
-        .status-error { background: #fee2e2; color: #991b1b; }
+        .status-waiting { background: #fdf2e9; color: #d35400; }
+        .status-listening { background: #d4f8e2; color: #1b5e20; animation: pulse 1s infinite; }
 
-        /* Credit Style */
         .credit {
             margin-top: 2rem;
-            font-size: 0.85rem;
-            color: #94a3b8;
-            border-top: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+            color: #b3a298;
+            border-top: 2px solid var(--primary-light);
             padding-top: 1rem;
         }
         .credit strong { color: var(--primary); }
 
-        @keyframes blink { 50% { opacity: 0.5; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="setup-section">
-        <p style="margin-top:0; font-weight:bold;">1. ตั้งค่าคำศัพท์:</p>
-        <input type="text" id="wordInput" placeholder="พิมพ์คำที่ต้องการ..." value="สวัสดียามเช้า">
-        <button class="btn-set" onclick="updateTarget()">ตกลง</button>
+        <p style="margin-top:0; font-weight:bold;">1. ตั้งค่าคำศัพท์ที่ต้องการ:</p>
+        <input type="text" id="wordInput" placeholder="พิมพ์คำศัพท์..." value="ตั้งใจเรียนนะ">
+        <button class="btn-set" onclick="updateTarget()">บันทึก</button>
     </div>
 
-    <p style="color: #64748b; margin-bottom: 0;">2. ฝึกอ่านออกเสียง:</p>
-    <div class="target-display" id="targetWord">สวัสดียามเช้า</div>
+    <p style="color: #8a6d5c; margin-bottom: 0;">2. ฟังต้นแบบและทดสอบ:</p>
+    <div class="target-container">
+        <div class="target-display" id="targetWord">ตั้งใจเรียนนะ</div>
+        <button class="btn-speaker" onclick="playText()" title="กดเพื่อฟังเสียงอ่าน">🔊</button>
+    </div>
     
     <div class="score-circle" id="circle">
         <div class="score-num" id="scoreDisplay">0%</div>
-        <div class="score-unit">คะแนนความชัด</div>
+        <div class="score-unit">ความแม่นยำ</div>
     </div>
 
     <button id="startBtn" class="btn-main">แตะเพื่อพูด</button>
     
     <div id="statusBadge" class="status-badge status-waiting">สถานะ: พร้อมใช้งาน</div>
     
-    <div class="result-text" id="transcript">เสียงของคุณจะปรากฏที่นี่...</div>
+    <div class="result-text" id="transcript">รอรับฟังเสียงพูดของคุณ...</div>
 
     <div class="credit">
         พัฒนาโดย <strong>By-พ่อโนเบล</strong>
@@ -184,6 +217,19 @@
     const statusBadge = document.getElementById('statusBadge');
     const circle = document.getElementById('circle');
 
+    // ระบบอ่านออกเสียงให้ฟัง
+    function playText() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // หยุดเสียงเก่าก่อน
+            const msg = new SpeechSynthesisUtterance();
+            msg.text = targetWord.innerText;
+            msg.lang = 'th-TH';
+            msg.rate = 0.85; 
+            msg.pitch = 1;
+            window.speechSynthesis.speak(msg);
+        }
+    }
+
     function updateTarget() {
         const val = wordInput.value.trim();
         if (val) {
@@ -195,24 +241,22 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-        statusBadge.innerHTML = "เบราว์เซอร์ไม่รองรับ Speech API";
-        statusBadge.className = "status-badge status-error";
+        statusBadge.innerHTML = "❌ เบราว์เซอร์ไม่รองรับ Speech Recognition";
+        statusBadge.style.color = "red";
     } else {
         const recognition = new SpeechRecognition();
         recognition.lang = 'th-TH';
         recognition.interimResults = false;
 
         startBtn.onclick = () => {
-            try {
-                recognition.start();
-            } catch (e) { console.log("Restarting..."); }
+            try { recognition.start(); } catch (e) {}
         };
 
         recognition.onstart = () => {
-            statusBadge.innerText = "กำลังฟังเสียง...";
+            statusBadge.innerText = "กำลังรับฟัง...";
             statusBadge.className = "status-badge status-listening";
             startBtn.disabled = true;
-            transcriptDisplay.innerText = "พูดได้เลย...";
+            transcriptDisplay.innerText = "พูดประโยคข้างบนได้เลยครับ...";
         };
 
         recognition.onresult = (event) => {
@@ -223,18 +267,17 @@
 
         recognition.onerror = (event) => {
             startBtn.disabled = false;
+            statusBadge.className = "status-badge status-waiting";
             if (event.error === 'no-speech') {
-                statusBadge.innerText = "ไม่ได้ยินเสียงพูด ลองใหม่นะครับ";
+                statusBadge.innerText = "สถานะ: ไม่พบเสียงพูด";
             } else {
-                statusBadge.innerText = "ข้อผิดพลาด: " + event.error;
+                statusBadge.innerText = "สถานะ: เกิดข้อผิดพลาด";
             }
-            statusBadge.className = "status-badge status-error";
         };
 
         recognition.onend = () => {
             startBtn.disabled = false;
             if (statusBadge.className.includes("listening")) {
-                statusBadge.innerText = "ประมวลผลเสร็จแล้ว";
                 statusBadge.className = "status-badge status-waiting";
             }
         };
@@ -242,42 +285,35 @@
 
     function resetUI() {
         scoreDisplay.innerText = "0%";
-        circle.style.borderColor = "#f1f5f9";
-        circle.style.color = "#1e293b";
-        transcriptDisplay.innerText = "รอฟังเสียงของคุณ...";
+        circle.style.borderColor = "#fff5ee";
+        circle.style.color = "#44332a";
+        transcriptDisplay.innerText = "รอรับฟังเสียงพูดของคุณ...";
+        statusBadge.innerText = "สถานะ: พร้อมใช้งาน";
     }
 
     function calculateScore(target, spoken) {
-        const cleanT = target.trim();
-        const cleanS = spoken.trim();
-
-        if (cleanT === cleanS) {
+        const t = target.trim();
+        const s = spoken.trim();
+        
+        if (t === s) {
             updateUI(100);
             return;
         }
 
-        const targetChars = Array.from(cleanT);
-        const spokenChars = Array.from(cleanS);
-        
+        const targetArr = Array.from(t);
+        const spokenArr = Array.from(s);
         let matches = 0;
-        const seen = new Array(spokenChars.length).fill(false);
 
-        targetChars.forEach(char => {
-            const foundIndex = spokenChars.findIndex((sChar, idx) => sChar === char && !seen[idx]);
-            if (foundIndex !== -1) {
-                matches++;
-                seen[foundIndex] = true;
-            }
+        targetArr.forEach(char => {
+            if (spokenArr.includes(char)) matches++;
         });
 
-        let score = Math.round((matches / Math.max(targetChars.length, spokenChars.length)) * 100);
-        if (score > 100) score = 100;
-        updateUI(score);
+        let score = Math.round((matches / Math.max(t.length, s.length)) * 100);
+        updateUI(score > 100 ? 100 : score);
     }
 
     function updateUI(score) {
         scoreDisplay.innerText = score + "%";
-        
         if (score >= 80) {
             circle.style.borderColor = "var(--success)";
             circle.style.color = "var(--success)";
