@@ -8,107 +8,70 @@
     <style>
         :root { --accent: #00f2fe; --bg: #0b101a; --neon: #711cff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        
         .card { width: 90%; max-width: 500px; background: #1a1f29; padding: 30px; border-radius: 25px; margin-top: 20px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        /* ปรับส่วนโจทย์ให้ใหญ่เป็นพิเศษ */
-        #quest-container {
-            background: rgba(113, 28, 255, 0.2);
-            border: 2px dashed var(--neon);
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        #quest { 
-            font-size: 60px; /* ขนาดใหญ่พิเศษ */
-            font-weight: 900; 
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--accent);
-            display: block;
-            margin-top: 5px;
-        }
-        .quest-label { font-size: 18px; color: #aaa; text-transform: uppercase; letter-spacing: 2px; }
-
+        #quest-container { background: rgba(113, 28, 255, 0.2); border: 2px dashed var(--neon); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+        #quest { font-size: 110px; font-weight: 900; color: var(--accent); text-shadow: 0 0 20px var(--accent); display: block; line-height: 1; }
+        .quest-label { font-size: 20px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; }
         input { width: 80%; padding: 15px; border-radius: 10px; border: none; font-size: 24px; text-align: center; margin-bottom: 15px; background: #0b0e14; color: white; border: 1px solid #444; }
         .btn { width: 85%; padding: 18px; border-radius: 50px; border: none; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-connect { background: var(--accent); color: #000; }
         .btn-score { background: linear-gradient(45deg, #711cff, #00f2fe); color: white; margin-top: 10px; }
-        
-        #received-img { width: 100%; border-radius: 15px; border: 3px solid #333; margin-bottom: 15px; background: white; }
-        #status { margin-top: 15px; font-size: 14px; font-weight: bold; }
-        
+        #received-img { width: 100%; border-radius: 15px; border: 3px solid #fff; margin-bottom: 15px; background: white; }
+        #status { margin-top: 15px; font-size: 14px; font-weight: bold; padding: 10px; }
         #score-box { display: none; }
-        .logo { font-size: 24px; font-weight: bold; color: var(--accent); margin-bottom: 5px; }
-        .sub-logo { font-size: 12px; color: #666; margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: var(--accent); }
     </style>
 </head>
 <body>
-
     <div class="card" id="setup-box">
         <div class="logo">เครื่องตรวจคะแนน</div>
-        <div class="sub-logo">By พ่อโนเบล</div>
-        <p>ใส่ ID จากเครื่องวาดรูปเพื่อเชื่อมต่อ</p>
-        <input type="number" id="target-id" placeholder="ใส่ตัวเลข 6 หลัก">
+        <div style="font-size: 12px; color: #666; margin-bottom: 20px;">By พ่อโนเบล</div>
+        <p>ระบุ ID เครื่องวาดรูป (6 หลัก)</p>
+        <input type="number" id="target-id" placeholder="000000">
         <button class="btn btn-connect" onclick="connectToPainter()">เชื่อมต่อเครื่องวาด ⚡</button>
-        <div id="status" style="color: #ffcc00;">🔴 ยังไม่ได้เชื่อมต่อ</div>
+        <div id="status" style="color: #ffcc00;">🟡 รอการเชื่อมต่อ</div>
     </div>
-
     <div class="card" id="score-box">
         <div id="quest-container">
-            <div class="quest-label">โจทย์ที่วาด</div>
-            <div id="quest">วาดอิสระ</div>
+            <div class="quest-label">โจทย์</div>
+            <div id="quest">?</div>
         </div>
-
-        <img id="received-img" src="" alt="Drawing">
-        
-        <div style="margin-bottom: 10px; color: #aaa;">ให้คะแนนลูก (0-100)</div>
-        <input type="number" id="score-input" placeholder="100" min="0" max="100">
-        <button class="btn btn-score" onclick="sendScore()">ส่งคะแนนให้ลูก 🏆</button>
+        <img id="received-img" src="">
+        <input type="number" id="score-input" placeholder="ใส่คะแนน 0-100">
+        <button class="btn btn-score" onclick="sendScore()">ส่งคะแนน 🏆</button>
     </div>
-
     <script>
         let peer = new Peer();
         let conn = null;
-
         function connectToPainter() {
             const id = document.getElementById('target-id').value;
-            if(!id) return alert(\"กรุณาใส่รหัส ID\");
-
-            document.getElementById('status').innerText = \"กำลังเชื่อมต่อ...\";
-            
+            if(!id) return alert("กรุณาใส่รหัส ID");
+            document.getElementById('status').innerText = "🔵 กำลังเชื่อมต่อ...";
             if(conn) conn.close();
-            conn = peer.connect(id, { reliable: true });
-
+            conn = peer.connect(id.toString(), { reliable: true });
             conn.on('open', () => {
-                document.getElementById('status').innerText = \"✅ เชื่อมต่อแล้ว! รอรับรูป...\";
-                document.getElementById('status').style.color = \"#00ff88\";
+                document.getElementById('status').innerText = "✅ เชื่อมต่อแล้ว! รอรับรูป...";
+                document.getElementById('status').style.color = "#00ff88";
             });
-
             conn.on('data', data => {
                 if(data.img) {
                     document.getElementById('received-img').src = data.img;
-                    // แสดงผลโจทย์ (Emoji หรือข้อความ) ให้ใหญ่ขึ้น
-                    document.getElementById('quest').innerText = data.char || \"วาดอิสระ\";
+                    document.getElementById('quest').innerText = data.char || "อิสระ";
                     document.getElementById('setup-box').style.display = 'none';
                     document.getElementById('score-box').style.display = 'block';
                 }
             });
-
-            peer.on('error', err => {
-                alert(\"หาไม่เจอ หรือรหัสผิดครับ\");
-                location.reload();
-            });
+            peer.on('error', err => { alert("รหัสผิด หรือหาไม่เจอครับ"); location.reload(); });
         }
-
         function sendScore() {
             const s = document.getElementById('score-input').value;
             if(conn && conn.open) {
                 conn.send({ score: s });
-                alert(\"ส่งคะแนน \" + s + \" แล้ว!\");
+                alert("ส่งคะแนน " + s + " แล้ว!");
                 document.getElementById('score-box').style.display = 'none';
                 document.getElementById('setup-box').style.display = 'block';
-                document.getElementById('status').innerText = \"✅ พร้อมรับรูปถัดไป\";
-                document.getElementById('score-input').value = \"\"; // ล้างค่าคะแนนเดิม
+                document.getElementById('status').innerText = "✅ พร้อมรับรูปใหม่";
+                document.getElementById('score-input').value = "";
             }
         }
     </script>
