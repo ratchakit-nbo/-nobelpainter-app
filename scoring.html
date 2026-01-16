@@ -6,63 +6,65 @@
     <title>Scoring Center - By พ่อโนเบล</title>
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --accent: #00f2fe; --bg: #0b101a; --neon: #711cff; }
+        :root { --accent: #00f2fe; --bg: #0b101a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .card { width: 90%; max-width: 500px; background: #1a1f29; padding: 30px; border-radius: 25px; margin-top: 20px; text-align: center; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #quest-container { background: rgba(113, 28, 255, 0.2); border: 2px dashed var(--neon); border-radius: 15px; padding: 20px; margin-bottom: 20px; }
-        #quest { font-size: 110px; font-weight: 900; color: var(--accent); text-shadow: 0 0 20px var(--accent); display: block; line-height: 1; }
-        .quest-label { font-size: 20px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; }
-        input { width: 80%; padding: 15px; border-radius: 10px; border: none; font-size: 24px; text-align: center; margin-bottom: 15px; background: #0b0e14; color: white; border: 1px solid #444; }
-        .btn { width: 85%; padding: 18px; border-radius: 50px; border: none; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-connect { background: var(--accent); color: #000; }
-        .btn-score { background: linear-gradient(45deg, #711cff, #00f2fe); color: white; margin-top: 10px; }
-        #received-img { width: 100%; border-radius: 15px; border: 3px solid #fff; margin-bottom: 15px; background: white; }
-        #status { margin-top: 15px; font-size: 14px; font-weight: bold; padding: 10px; }
-        #score-box { display: none; }
-        .logo { font-size: 24px; font-weight: bold; color: var(--accent); }
+        .card { width: 90%; max-width: 450px; background: #1a1f29; padding: 30px; border-radius: 25px; margin-top: 30px; text-align: center; border: 1px solid #333; }
+        input { width: 80%; padding: 15px; border-radius: 10px; border: none; font-size: 20px; text-align: center; margin-bottom: 15px; background: #0b0e14; color: white; border: 1px solid #333; }
+        .btn { width: 85%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; }
+        .btn-connect { background: #711cff; color: white; }
+        .btn-send { background: var(--accent); color: #000; margin-top: 15px; }
+        #received-img { width: 100%; border: 3px solid white; border-radius: 10px; margin: 15px 0; background: white; max-height: 60vh; object-fit: contain; }
     </style>
 </head>
 <body>
+    <h1 style="color:var(--accent); margin-top:40px;">ศูนย์ตรวจคะแนน พ่อโนเบล</h1>
+    
     <div class="card" id="setup-box">
-        <div class="logo">เครื่องตรวจคะแนน</div>
-        <div style="font-size: 12px; color: #666; margin-bottom: 20px;">By พ่อโนเบล</div>
-        <p>ระบุ ID เครื่องวาดรูป (6 หลัก)</p>
+	<button class="btn btn-connect" onclick="window.location.href='https://ratchakit-nbo.github.io/-nobelpainter-app/game-nobel.html'">
+    🏠 กลับหน้าเมนูหลัก
+</button>
+        <p>กรอกรหัส 6 หลักจากเครื่องวาด</p>
         <input type="number" id="target-id" placeholder="000000">
-        <button class="btn btn-connect" onclick="connectToPainter()">เชื่อมต่อเครื่องวาด ⚡</button>
-        <div id="status" style="color: #ffcc00;">🟡 รอการเชื่อมต่อ</div>
+        <button class="btn btn-connect" onclick="connect()">เชื่อมต่อ 🔗</button>
+        <p id="status" style="margin-top:15px; color:#888;">รอเชื่อมต่อ...</p>
     </div>
-    <div class="card" id="score-box">
-        <div id="quest-container">
-            <div class="quest-label">โจทย์</div>
-            <div id="quest">?</div>
-        </div>
+
+    <div class="card" id="score-box" style="display:none;">
+        <h2 id="quest">โจทย์: -</h2>
         <img id="received-img" src="">
-        <input type="number" id="score-input" placeholder="ใส่คะแนน 0-100">
-        <button class="btn btn-score" onclick="sendScore()">ส่งคะแนน 🏆</button>
+        <p>ให้คะแนน (0-100)</p>
+        <input type="number" id="score-input" placeholder="100">
+        <button class="btn btn-send" onclick="sendScore()">ส่งคะแนนกลับ 🚀</button>
     </div>
+
     <script>
-        let peer = new Peer();
+        const peer = new Peer({ config: { 'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }] } });
         let conn = null;
-        function connectToPainter() {
+
+        function connect() {
             const id = document.getElementById('target-id').value;
-            if(!id) return alert("กรุณาใส่รหัส ID");
-            document.getElementById('status').innerText = "🔵 กำลังเชื่อมต่อ...";
+            if(!id) return alert("กรุณากรอกรหัส");
+            document.getElementById('status').innerText = "กำลังเชื่อมต่อ...";
             if(conn) conn.close();
-            conn = peer.connect(id.toString(), { reliable: true });
+            conn = peer.connect(id, { reliable: true });
+
             conn.on('open', () => {
                 document.getElementById('status').innerText = "✅ เชื่อมต่อแล้ว! รอรับรูป...";
                 document.getElementById('status').style.color = "#00ff88";
             });
+
             conn.on('data', data => {
                 if(data.img) {
                     document.getElementById('received-img').src = data.img;
-                    document.getElementById('quest').innerText = data.char || "อิสระ";
+                    document.getElementById('quest').innerText = "โจทย์: " + (data.char || "วาดอิสระ");
                     document.getElementById('setup-box').style.display = 'none';
                     document.getElementById('score-box').style.display = 'block';
                 }
             });
-            peer.on('error', err => { alert("รหัสผิด หรือหาไม่เจอครับ"); location.reload(); });
+
+            peer.on('error', err => { alert("หาไม่เจอ หรือรหัสผิดครับ"); location.reload(); });
         }
+
         function sendScore() {
             const s = document.getElementById('score-input').value;
             if(conn && conn.open) {
@@ -70,8 +72,7 @@
                 alert("ส่งคะแนน " + s + " แล้ว!");
                 document.getElementById('score-box').style.display = 'none';
                 document.getElementById('setup-box').style.display = 'block';
-                document.getElementById('status').innerText = "✅ พร้อมรับรูปใหม่";
-                document.getElementById('score-input').value = "";
+                document.getElementById('status').innerText = "✅ พร้อมรับรูปถัดไป";
             }
         }
     </script>
