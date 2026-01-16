@@ -13,14 +13,24 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;500;800&display=swap');
         body { font-family: 'Kanit', sans-serif; overflow: hidden; position: fixed; width: 100%; height: 100%; }
-        #canvas-wrapper { position: relative; width: 100%; height: calc(100vh - 350px); background: #fff; border-radius: 2rem; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        
+        /* สัดส่วนหน้าจอคนวาด */
+        #canvas-wrapper { position: relative; width: 100%; height: calc(100vh - 380px); background: #fff; border-radius: 2rem; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
         canvas { width: 100% !important; height: 100% !important; touch-action: none; cursor: crosshair; }
-        #image-wrapper { width: 100%; height: calc(100vh - 320px); display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 2rem; }
+        
+        /* สัดส่วนหน้าจอคนทาย */
+        #image-wrapper { width: 100%; height: 45vh; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 2rem; overflow: hidden; }
         #received-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        /* พื้นที่ปุ่มคำตอบแบบเลื่อนได้ */
+        #answer-buttons-container { flex: 1; overflow-y: auto; padding-top: 10px; padding-bottom: 20px; }
+
         .hidden { display: none; }
         .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); }
+        
         .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .color-dot.active { border-color: #4f46e5; transform: scale(1.2); }
+        
         .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -28,6 +38,8 @@
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
+
+        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -77,30 +89,32 @@
                     </select>
                 </div>
                 <div id="canvas-wrapper" class="border-4 border-slate-100"><canvas id="paintCanvas"></canvas></div>
-                <div class="grid grid-cols-2 gap-3 pb-2">
+                <div class="grid grid-cols-2 gap-3 pb-2 pt-2">
                     <button onclick="clearCanvas()" class="bg-slate-100 text-slate-500 font-bold py-3 rounded-2xl">ล้าง</button>
                     <button onclick="sendData()" class="bg-indigo-600 text-white font-bold py-3 rounded-2xl shadow-lg">ส่งภาพ</button>
                 </div>
             </div>
 
-            <div id="guesser-section" class="hidden h-full flex flex-col space-y-3 text-center">
-                <div id="image-wrapper" class="relative border-4 border-slate-100 p-2 shadow-inner">
+            <div id="guesser-section" class="hidden h-full flex flex-col overflow-hidden">
+                <div id="image-wrapper" class="relative border-4 border-slate-100 p-2 shadow-inner shrink-0">
                     <img id="received-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
                     <div id="wait-msg" class="absolute inset-0 flex items-center justify-center text-slate-300 font-bold animate-pulse">รอรูปภาพ...</div>
                 </div>
-                <div id="answer-buttons" class="grid grid-cols-2 gap-3 flex-1 pt-1 pb-1 no-scrollbar overflow-hidden"></div>
+                <div id="answer-buttons-container" class="no-scrollbar">
+                    <div id="answer-buttons" class="grid grid-cols-2 gap-3"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const wordBank = {
-            "สัตว์ 🐾": ["หมี 🐻", "เสือ 🐯", "กระต่าย 🐰", "แมว 🐱", "สุนัข 🐶", "ช้าง 🐘", "ม้า 🐴", "ลิง 🐒", "ไก่ 🐔", "เป็ด 🦆", "หมู 🐷", "วัว 🐮", "งู 🐍", "นก 🐦", "แพนด้า 🐼", "สิงโต 🦁", "ยีราฟ 🦒", "เพนกวิน 🐧", "ฉลาม 🦈", "นกฮูก 🦉"],
-            "ดอกไม้/พืช 🌸": ["กุหลาบ 🌹", "ทานตะวัน 🌻", "ชบา 🌺", "มะลิ 🌼", "ดอกบัว 🪷", "ทิวลิป 🌷", "ต้นไม้ 🌳", "กระบองเพชร 🌵", "เห็ด 🍄"],
+            "สัตว์ 🐾": ["หมี 🐻", "เสือ 🐯", "กระต่าย 🐰", "แมว 🐱", "สุนัข 🐶", "ช้าง 🐘", "ม้า 🐴", "ลิง 🐒", "เป็ด 🦆", "หมู 🐷", "งู 🐍", "นก 🐦", "แพนด้า 🐼", "สิงโต 🦁", "จระเข้ 🐊", "เต่า 🐢", "ปลา 🐟", "ยีราฟ 🦒", "ค้างคาว 🦇", "กบ 🐸"],
+            "ดอกไม้/พืช 🌸": ["กุหลาบ 🌹", "ทานตะวัน 🌻", "ชบา 🌺", "มะลิ 🌼", "ดอกบัว 🪷", "ทิวลิป 🌷", "ต้นไม้ 🌳", "กระบองเพชร 🌵", "เห็ด 🍄", "ใบไม้ 🍃"],
             "ของกิน 🍎": ["แอปเปิ้ล 🍎", "กล้วย 🍌", "ส้ม 🍊", "องุ่น 🍇", "แตงโม 🍉", "สับปะรด 🍍", "พิซซ่า 🍕", "ไอศกรีม 🍦", "เค้ก 🍰", "โดนัท 🍩", "ไข่ดาว 🍳", "แฮมเบอร์เกอร์ 🍔"],
-            "สิ่งของ 🏠": ["บ้าน 🏠", "รถยนต์ 🚗", "จักรยาน 🚲", "เครื่องบิน ✈️", "เรือ 🚢", "โทรศัพท์ 📱", "คอมพิวเตอร์ 💻", "โทรทัศน์ 📺", "หนังสือ 📖", "ร่ม ☂️", "แว่นตา 👓", "นาฬิกา ⌚", "ลูกบอล ⚽", "กีตาร์ 🎸"],
-            "ธรรมชาติ 🌳": ["พระอาทิตย์ ☀️", "พระจันทร์ 🌙", "ดวงดาว ⭐", "เมฆ ☁️", "ฝน 🌧️", "สายรุ้ง 🌈", "ทะเล 🌊", "ไฟ 🔥"],
-            "อักษร/ตัวเลข 🔡": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "ก", "ข", "ค", "ง", "จ", "ฉ", "ช", "ด", "ต", "น", "บ", "ป", "ผ", "ฝ", "ม", "ย", "ร", "ล", "ว", "ส", "ห", "อ"]
+            "สิ่งของ 🏠": ["บ้าน 🏠", "รถยนต์ 🚗", "จักรยาน 🚲", "เครื่องบิน ✈️", "เรือ 🚢", "โทรศัพท์ 📱", "คอมพิวเตอร์ 💻", "ทีวี 📺", "ร่ม ☂️", "แว่นตา 👓", "นาฬิกา ⌚", "บอล ⚽"],
+            "ธรรมชาติ 🌳": ["อาทิตย์ ☀️", "จันทร์ 🌙", "ดาว ⭐", "เมฆ ☁️", "ฝน 🌧️", "สายรุ้ง 🌈", "ทะเล 🌊", "ไฟ 🔥"],
+            "อักษร/เลข 🔡": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "ก", "ข", "ค", "ง", "จ", "ฉ", "ช", "ด", "ต", "น", "บ", "ป", "ผ", "ฝ", "ม", "ย", "ร", "ล", "ว", "ส", "ห", "อ"]
         };
         const allWordsFlat = Object.values(wordBank).flat();
         let peer, conn, myRole;
@@ -110,7 +124,7 @@
 
         function initPeer(role) {
             const roomCode = document.getElementById('room-code').value;
-            if (!roomCode || roomCode.length < 3) return Swal.fire('ใส่รหัสห้อง 3 หลักขึ้นไป');
+            if (!roomCode || roomCode.length < 3) return Swal.fire('รหัส 3 หลักขึ้นไป');
             myRole = role;
             const peerId = (role === 'drawer' ? 'NOBEL-D-' : 'NOBEL-G-') + roomCode;
             const targetId = (role === 'drawer' ? 'NOBEL-G-' : 'NOBEL-D-') + roomCode;
@@ -118,7 +132,7 @@
             peer.on('open', () => {
                 document.getElementById('setup-section').classList.add('hidden');
                 document.getElementById(role + '-section').classList.remove('hidden');
-                document.getElementById('status-display').innerText = `ห้อง: ${roomCode} | คุณคือ: ${role === 'drawer' ? 'คนวาด' : 'คนทาย'}`;
+                document.getElementById('status-display').innerText = `ห้อง: ${roomCode} | ${role === 'drawer' ? 'คนวาด' : 'คนทาย'}`;
                 if (role === 'drawer') {
                     populateWordSelect(); setTimeout(resizeCanvas, 100);
                     peer.on('connection', (c) => { conn = c; setupConn(); document.getElementById('drawer-feedback').innerText = "เชื่อมต่อแล้ว! ✅"; });
@@ -128,17 +142,15 @@
 
         function setupConn() {
             conn.on('data', (data) => {
-                // ฝั่งคนทายรับภาพ
                 if (data.type === 'image' && myRole === 'guesser') {
                     document.getElementById('received-image').src = data.img;
                     document.getElementById('wait-msg').classList.add('hidden');
                     createButtons(data.ans);
                 } 
-                // ฝั่งคนวาดรับผลลัพธ์จากคนทาย
                 else if (data.type === 'result' && myRole === 'drawer') {
                     if (data.status === 'correct') {
                         confetti({ particleCount: 150, spread: 100 });
-                        Swal.fire({ title: 'คนทายตอบถูกแล้ว!', text: `คุณวาดได้เหมือน : ${data.ans}`, icon: 'success' });
+                        Swal.fire({ title: 'คนทายตอบถูกแล้ว!', text: `คุณวาดได้เหมือน: ${data.ans}`, icon: 'success' });
                     } else {
                         Swal.fire({ title: 'คนทายตอบผิด!', icon: 'error', toast: true, position: 'top', timer: 2000 });
                     }
@@ -147,7 +159,7 @@
         }
 
         function sendData() {
-            if (!conn) return Swal.fire('รอคนทายเชื่อมต่อก่อนครับ');
+            if (!conn) return Swal.fire('รอคนทายก่อนครับ');
             conn.send({ type: 'image', img: canvas.toDataURL('image/png', 0.5), ans: document.getElementById('target-word').value });
             Swal.fire({ title: 'ส่งแล้ว!', icon: 'success', toast: true, position: 'top-end', timer: 1000 });
         }
@@ -159,25 +171,24 @@
             choices.push(correct); choices.sort(() => 0.5 - Math.random());
             choices.forEach(choice => {
                 const btn = document.createElement('button');
-                btn.className = "bg-slate-50 border-2 border-slate-100 h-full rounded-3xl font-black text-md flex items-center justify-center active:scale-95";
+                btn.className = "bg-white border-2 border-slate-100 p-4 rounded-2xl font-black text-sm shadow-sm active:scale-95 transition-all truncate";
                 btn.innerText = choice;
                 btn.onclick = () => {
                     if (choice === correct) {
                         confetti({ particleCount: 150, spread: 100 });
-                        Swal.fire('ถูกต้อง!', `มันคือ "${choice}"`, 'success'); // Popup ฝั่งคนทาย
-                        conn.send({ type: 'result', status: 'correct', ans: correct }); // ส่งไปบอกคนวาด
+                        Swal.fire('ถูกต้อง!', `มันคือ "${choice}"`, 'success');
+                        conn.send({ type: 'result', status: 'correct', ans: correct });
                     } else {
                         document.getElementById('main-card').classList.add('shake');
                         setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 500);
-                        Swal.fire({ title: 'ผิดจ้า!', icon: 'error', timer: 2000 }); // Popup ฝั่งคนทาย
-                        conn.send({ type: 'result', status: 'wrong' }); // ส่งไปบอกคนวาด
+                        Swal.fire({ title: 'ผิดจ้า!', icon: 'error', timer: 1500 });
+                        conn.send({ type: 'result', status: 'wrong' });
                     }
                 };
                 container.appendChild(btn);
             });
         }
 
-        // Canvas & UI Logics
         function resizeCanvas() { const w = document.getElementById('canvas-wrapper'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.lineCap = 'round'; }
         function setColor(c, el) { isEraser = false; currentBrushColor = c; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
         function setEraser(el) { isEraser = true; document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
