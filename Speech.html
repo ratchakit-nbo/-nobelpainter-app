@@ -12,7 +12,6 @@
             --mic-blue: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
             --mic-green: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
             --mic-red: linear-gradient(135deg, #ff4757 0%, #c0392b 100%);
-            
             --bg-dark: #121212;
             --container-bg: #1e1e1e;
             --success: #2ecc71;
@@ -49,7 +48,6 @@
             padding: 0;
         }
 
-        /* 1. ส่วนตั้งคำศัพท์ (ด้านบนสุด - สีชมพู) */
         .setup-section {
             background: var(--mic-pink);
             padding: 1.5rem;
@@ -62,7 +60,6 @@
             color: #fff;
             margin-bottom: 0.8rem;
             display: block;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
         .input-group {
@@ -92,11 +89,9 @@
             font-weight: bold;
         }
 
-        /* 2. ส่วนแสดงคำศัพท์ (สีส้ม) */
         .target-box {
             padding: 1.5rem 1rem;
             background: var(--mic-orange);
-            margin: 0;
             border-bottom: 2px solid #333;
         }
 
@@ -104,11 +99,8 @@
             font-size: clamp(2rem, 10vw, 3rem); 
             font-weight: 800;
             color: #fff;
-            margin: 0;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* 3. ปุ่มเปิด/ปิดไมค์ และลำโพง */
         .control-row {
             display: flex;
             justify-content: center;
@@ -128,7 +120,6 @@
             justify-content: center;
             font-size: 1.4rem;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: 0.3s;
         }
 
         .btn-mute.active {
@@ -136,7 +127,6 @@
             color: white;
         }
 
-        /* 4. วงกลมสถานะ (สีเขียว) */
         .status-circle {
             width: 110px;
             height: 110px;
@@ -147,13 +137,12 @@
             align-items: center;
             margin: 1.5rem auto;
             background: #000;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 800;
             color: #2ecc71;
             box-shadow: inset 0 0 15px rgba(0,0,0,1);
         }
 
-        /* 5. ปุ่มเริ่มพูด (สีฟ้า) */
         .btn-main {
             background: var(--mic-blue);
             color: white;
@@ -168,7 +157,7 @@
             box-shadow: 0 8px 20px rgba(0, 210, 255, 0.4);
         }
 
-        .btn-main:disabled { background: #444; opacity: 0.6; box-shadow: none; }
+        .btn-main:disabled { background: #444; opacity: 0.6; }
 
         .transcript-box {
             margin: 1.2rem 20px;
@@ -179,7 +168,6 @@
             border-radius: 15px;
             border: 1px solid #333;
             min-height: 20px;
-            font-family: 'Courier New', monospace;
         }
 
         .home-btn {
@@ -257,58 +245,40 @@
     let isMuted = false;
     let lastResult = "";
 
-    // ตั้งค่าไมโครโฟน
     async function setupMic() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             
             mediaRecorder.ondataavailable = (e) => {
-                if (!isMuted) audioChunks.push(e.data);
+                if (e.data.size > 0) audioChunks.push(e.data);
             };
             
             mediaRecorder.onstop = () => {
-                if (audioChunks.length > 0) {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    const userVoice = new Audio(audioUrl);
-                    
-                    statusBox.innerText = "Voice";
-                    userVoice.play().catch(e => console.error(e));
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const userVoice = new Audio(audioUrl);
+                
+                statusBox.innerText = "Check";
+                userVoice.play().catch(e => console.error(e));
 
-                    userVoice.onended = () => {
-                        checkStrictMatch(targetWord.innerText, lastResult);
-                    };
-                }
+                userVoice.onended = () => {
+                    checkStrictMatch(targetWord.innerText, lastResult);
+                };
             };
         } catch (err) {
-            transcriptDisplay.innerText = "กรุณาอนุญาตการใช้ไมโครโฟน";
+            transcriptDisplay.innerText = "กรุณาอนุญาตให้เข้าถึงไมโครโฟน";
         }
     }
 
     setupMic();
-
-    // ปุ่มเปิดปิดไมค์
-    function toggleMute() {
-        isMuted = !isMuted;
-        if (isMuted) {
-            muteBtn.innerText = "🔇";
-            muteBtn.classList.add('active');
-            startBtn.disabled = true;
-            transcriptDisplay.innerText = "ปิดไมโครโฟนอยู่";
-        } else {
-            muteBtn.innerText = "🎤";
-            muteBtn.classList.remove('active');
-            startBtn.disabled = false;
-            transcriptDisplay.innerText = "ไมโครโฟนพร้อมใช้งาน";
-        }
-    }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.lang = 'th-TH';
         recognition.interimResults = false;
+        recognition.continuous = false;
 
         recognition.onstart = () => {
             statusBox.innerText = "Listening";
@@ -323,24 +293,37 @@
         recognition.onresult = (event) => {
             lastResult = event.results[0][0].transcript;
             transcriptDisplay.innerHTML = `คุณพูดว่า: <b style="color:#00d2ff">${lastResult}</b>`;
+            recognition.stop();
         };
 
         recognition.onend = () => {
-            if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if(mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
             if (!isMuted) startBtn.disabled = false;
             statusBox.classList.remove('pulse-orange');
         };
 
         recognition.onerror = () => {
             statusBox.innerText = "?";
+            if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
             if (!isMuted) startBtn.disabled = false;
         };
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        muteBtn.innerText = isMuted ? "🔇" : "🎤";
+        muteBtn.classList.toggle('active', isMuted);
+        startBtn.disabled = isMuted;
+        transcriptDisplay.innerText = isMuted ? "ปิดไมโครโฟนอยู่" : "ระบบรอรับฟังเสียงของคุณ...";
     }
 
     function playAiVoice(text) {
         window.speechSynthesis.cancel();
         const msg = new SpeechSynthesisUtterance(text);
         msg.lang = 'th-TH';
+        msg.rate = 1.0;
         window.speechSynthesis.speak(msg);
     }
 
@@ -354,11 +337,21 @@
     }
 
     startBtn.onclick = () => {
-        if (recognition && !isMuted) recognition.start();
+        if (recognition && !isMuted) {
+            try {
+                recognition.start();
+            } catch (e) {
+                recognition.stop();
+            }
+        }
     };
 
+    // แก้ไข Logic การตรวจสอบคำที่นี่
     function checkStrictMatch(target, spoken) {
-        const isMatch = target.trim() === spoken.trim();
+        // ตรวจสอบว่ามีคำเป้าหมายอยู่ในประโยคที่พูดหรือไม่ (ไม่สนเว้นวรรคและตัวพิมพ์เล็กใหญ่)
+        const isMatch = spoken.replace(/\s+/g, '').includes(target.replace(/\s+/g, ''));
+        
+        statusBox.style.fontSize = "2.2rem";
         if (isMatch) {
             statusBox.innerText = "ถูก";
             statusBox.style.color = "var(--success)";
@@ -366,7 +359,7 @@
         } else {
             statusBox.innerText = "ผิด";
             statusBox.style.color = "var(--danger)";
-            playAiVoice("คุณพูดผิด");
+            playAiVoice("คุณพูดไม่ชัด ลองอีกครั้ง"); // แก้ไขคำพูด AI ตามที่ขอ
         }
     }
 </script>
