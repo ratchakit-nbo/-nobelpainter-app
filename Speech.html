@@ -3,212 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ฝึกออกเสียงกับโนเบล - By พ่อโนเบล</title>
+    <title>Nobel Pronunciation Lab - By พ่อโนเบล</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --mic-orange: linear-gradient(135deg, #ff9d5c 0%, #ff6b00 100%);
-            --mic-pink: linear-gradient(135deg, #ff74a4 0%, #ff2a6d 100%);
-            --mic-blue: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
-            --mic-green: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-            --mic-red: linear-gradient(135deg, #ff4757 0%, #c0392b 100%);
-            --bg-dark: #121212;
-            --container-bg: #1e1e1e;
-            --success: #2ecc71;
-            --danger: #ff4757;
-            --text-silver: #e0e0e0;
-            --shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
+            --bg-body: #0a0a0c;
+            --card-bg: #16161a;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --success-neon: #10b981;
+            --danger-neon: #f43f5e;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background: var(--bg-dark);
-            background-image: radial-gradient(rgba(255, 107, 0, 0.1) 1px, transparent 1px);
-            background-size: 25px 25px;
+            background: var(--bg-body);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             padding: 15px;
-            color: var(--text-silver);
+            color: var(--text-main);
         }
 
         .container {
-            background: var(--container-bg);
-            border-radius: 40px;
-            box-shadow: var(--shadow);
+            background: var(--card-bg);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-width: 420px;
-            box-sizing: border-box;
-            text-align: center;
-            border: 2px solid #333;
-            position: relative;
+            max-width: 400px;
+            border: 1px solid var(--border);
             overflow: hidden;
-            padding: 0;
+            position: relative;
         }
 
         .setup-section {
-            background: var(--mic-pink);
+            background: var(--glass);
             padding: 1.5rem;
-            border-bottom: 5px solid rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--border);
         }
 
         .label-text {
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+            letter-spacing: 0.1rem;
+            margin-bottom: 0.75rem;
             display: block;
+            text-transform: uppercase;
         }
 
         .input-group {
             display: flex;
-            gap: 8px;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
         }
 
         input[type="text"] {
             flex: 1;
-            padding: 12px 15px;
+            padding: 10px 12px;
             border: none;
-            border-radius: 15px;
-            font-size: 0.95rem;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
             outline: none;
-            background: #fff;
-            color: #ff2a6d;
-            font-weight: bold;
         }
 
         .btn-set {
-            background: #2f3542;
+            background: var(--accent-purple);
             color: white;
             border: none;
-            padding: 0 20px;
-            border-radius: 15px;
+            padding: 0 18px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
         }
 
         .target-box {
-            padding: 1.5rem 1rem;
-            background: var(--mic-orange);
-            border-bottom: 2px solid #333;
+            padding: 2.5rem 1rem;
+            text-align: center;
         }
 
         .target-display {
-            font-size: clamp(2rem, 10vw, 3rem); 
+            font-size: 3.5rem;
             font-weight: 800;
-            color: #fff;
+            background: linear-gradient(to bottom right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
         }
 
         .control-row {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-top: 10px;
+            gap: 16px;
         }
 
         .btn-round {
-            background: #fff;
-            border: none;
+            background: var(--glass);
+            border: 1px solid var(--border);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 1.25rem;
+            color: white;
+            transition: 0.3s;
         }
 
         .btn-mute.active {
-            background: var(--mic-red);
-            color: white;
+            background: var(--danger-neon);
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+        }
+
+        .status-area {
+            margin: 1.5rem auto;
+            position: relative;
+            width: 120px;
+            height: 120px;
         }
 
         .status-circle {
-            width: 110px;
-            height: 110px;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            border: 8px solid #2a2a2a;
+            border: 2px solid var(--border);
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 1.5rem auto;
-            background: #000;
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #2ecc71;
-            box-shadow: inset 0 0 15px rgba(0,0,0,1);
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .pulse-active {
+            border-color: var(--accent-cyan);
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .btn-main {
-            background: var(--mic-blue);
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
             color: white;
             border: none;
             padding: 1.2rem;
-            border-radius: 25px;
-            font-size: 1.3rem;
+            border-radius: 20px;
+            font-size: 1.1rem;
             font-weight: 800;
             cursor: pointer;
-            width: calc(100% - 40px);
-            margin: 0 20px 1rem 20px;
-            box-shadow: 0 8px 20px rgba(0, 210, 255, 0.4);
+            width: calc(100% - 48px);
+            margin: 0 24px 1.5rem 24px;
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4);
         }
 
-        .btn-main:disabled { background: #444; opacity: 0.6; }
+        .btn-main:disabled { opacity: 0.4; filter: grayscale(1); }
 
         .transcript-box {
-            margin: 1.2rem 20px;
-            font-size: 0.9rem;
-            color: #2ecc71; 
-            padding: 15px;
-            background: #000;
-            border-radius: 15px;
-            border: 1px solid #333;
-            min-height: 20px;
+            margin: 0 24px 1.5rem 24px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            padding: 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            min-height: 24px;
+            border: 1px solid var(--border);
         }
 
         .home-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: block;
+            text-align: center;
             text-decoration: none;
-            color: #00d2ff;
-            border: 2px solid #00d2ff;
-            padding: 0.8rem 1.5rem;
-            border-radius: 15px;
-            margin: 1rem 20px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            margin-bottom: 2rem;
         }
 
         .credit {
-            padding: 1.2rem;
-            font-size: 0.8rem;
-            color: #666;
-            border-top: 1px solid #2a2a2a;
+            background: var(--glass);
+            padding: 1rem;
+            font-size: 0.7rem;
+            color: #444;
+            letter-spacing: 1.5px;
         }
 
-        .pulse-orange {
-            animation: pulse-ring 1.25s infinite;
-            border-color: #ff6b00 !important;
-        }
+        .success-text { color: var(--success-neon) !important; }
+        .danger-text { color: var(--danger-neon) !important; }
 
-        @keyframes pulse-ring {
-            0% { transform: scale(.95); opacity: 1; }
-            50% { transform: scale(1.02); opacity: 0.8; }
-            100% { transform: scale(.95); opacity: 1; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="setup-section">
-        <span class="label-text">ตั้งคำศัพท์ฝึกพูด</span>
+        <span class="label-text">VOCABULARY SETTINGS</span>
         <div class="input-group">
-            <input type="text" id="wordInput" placeholder="พิมพ์คำที่นี่..." value="สวัสดี">
-            <button class="btn-set" onclick="updateTarget()">ตกลง</button>
+            <input type="text" id="wordInput" placeholder="Enter word..." value="สวัสดี">
+            <button class="btn-set" onclick="updateTarget()">SET</button>
         </div>
     </div>
 
@@ -220,15 +230,17 @@
         </div>
     </div>
     
-    <div class="status-circle" id="statusBox">?</div>
+    <div class="status-area">
+        <div class="status-circle" id="statusBox">READY</div>
+    </div>
 
-    <button id="startBtn" class="btn-main">เริ่มพูดตอนนี้</button>
+    <button id="startBtn" class="btn-main">TAP TO SPEAK</button>
     
-    <div class="transcript-box" id="transcript">ระบบรอรับฟังเสียงของคุณ...</div>
+    <div class="transcript-box" id="transcript">Waiting for your voice...</div>
 
-    <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/game-nobel.html" class="home-btn">🏠 หน้าหลัก</a>
+    <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/game-nobel.html" class="home-btn">← BACK TO HOME</a>
 
-    <div class="credit">DESIGNED <strong>BY-พ่อโนเบล</strong></div>
+    <div class="credit">SYSTEM BY <strong>พ่อโนเบล</strong></div>
 </div>
 
 <script>
@@ -247,68 +259,58 @@
 
     async function setupMic() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { echoCancellation: true, noiseSuppression: true } 
+            });
             mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) audioChunks.push(e.data);
-            };
-            
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const userVoice = new Audio(audioUrl);
-                
-                statusBox.innerText = "Check";
-                userVoice.play().catch(e => console.error(e));
-
-                userVoice.onended = () => {
-                    checkStrictMatch(targetWord.innerText, lastResult);
-                };
+                if (audioChunks.length > 0) {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const userVoice = new Audio(audioUrl);
+                    statusBox.innerText = "CHECKING";
+                    statusBox.classList.remove('pulse-active');
+                    userVoice.play();
+                    userVoice.onended = () => {
+                        setTimeout(() => { checkStrictMatch(targetWord.innerText, lastResult); }, 400);
+                    };
+                }
             };
-        } catch (err) {
-            transcriptDisplay.innerText = "กรุณาอนุญาตให้เข้าถึงไมโครโฟน";
-        }
+        } catch (err) { transcriptDisplay.innerText = "Please enable microphone access"; }
     }
-
     setupMic();
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.lang = 'th-TH';
-        recognition.interimResults = false;
-        recognition.continuous = false;
-
         recognition.onstart = () => {
-            statusBox.innerText = "Listening";
-            statusBox.style.color = "#ff6b00";
-            statusBox.classList.add('pulse-orange');
+            statusBox.innerText = "LISTENING";
+            statusBox.classList.add('pulse-active');
             startBtn.disabled = true;
             audioChunks = [];
             lastResult = "";
             if(mediaRecorder && mediaRecorder.state === 'inactive') mediaRecorder.start();
         };
-
         recognition.onresult = (event) => {
             lastResult = event.results[0][0].transcript;
-            transcriptDisplay.innerHTML = `คุณพูดว่า: <b style="color:#00d2ff">${lastResult}</b>`;
+            transcriptDisplay.innerHTML = `You said: <b style="color:var(--accent-cyan)">${lastResult}</b>`;
             recognition.stop();
         };
-
         recognition.onend = () => {
-            if(mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-            }
+            setTimeout(() => { if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 300);
             if (!isMuted) startBtn.disabled = false;
-            statusBox.classList.remove('pulse-orange');
         };
+    }
 
-        recognition.onerror = () => {
-            statusBox.innerText = "?";
-            if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-            if (!isMuted) startBtn.disabled = false;
-        };
+    function playAiVoice(text) {
+        window.speechSynthesis.cancel();
+        setTimeout(() => {
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'th-TH';
+            window.speechSynthesis.speak(msg);
+        }, 150);
     }
 
     function toggleMute() {
@@ -316,50 +318,31 @@
         muteBtn.innerText = isMuted ? "🔇" : "🎤";
         muteBtn.classList.toggle('active', isMuted);
         startBtn.disabled = isMuted;
-        transcriptDisplay.innerText = isMuted ? "ปิดไมโครโฟนอยู่" : "ระบบรอรับฟังเสียงของคุณ...";
-    }
-
-    function playAiVoice(text) {
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'th-TH';
-        msg.rate = 1.0;
-        window.speechSynthesis.speak(msg);
+        statusBox.innerText = isMuted ? "OFF" : "READY";
     }
 
     function updateTarget() {
-        const val = wordInput.value.trim();
-        if (val) {
-            targetWord.innerText = val;
-            statusBox.innerText = "?";
-            statusBox.style.color = "#2ecc71";
-        }
+        targetWord.innerText = wordInput.value.trim() || "สวัสดี";
+        statusBox.innerText = "READY";
+        statusBox.className = "status-circle";
     }
 
-    startBtn.onclick = () => {
-        if (recognition && !isMuted) {
-            try {
-                recognition.start();
-            } catch (e) {
-                recognition.stop();
-            }
-        }
-    };
+    startBtn.onclick = () => { if (recognition && !isMuted) recognition.start(); };
 
-    // แก้ไข Logic การตรวจสอบคำที่นี่
     function checkStrictMatch(target, spoken) {
-        // ตรวจสอบว่ามีคำเป้าหมายอยู่ในประโยคที่พูดหรือไม่ (ไม่สนเว้นวรรคและตัวพิมพ์เล็กใหญ่)
-        const isMatch = spoken.replace(/\s+/g, '').includes(target.replace(/\s+/g, ''));
+        const cleanSpoken = spoken.trim().replace(/\s+/g, '');
+        const cleanTarget = target.trim().replace(/\s+/g, '');
+        const isMatch = cleanSpoken.includes(cleanTarget);
         
-        statusBox.style.fontSize = "2.2rem";
-        if (isMatch) {
+        statusBox.className = "status-circle";
+        if (isMatch && cleanSpoken !== "") {
             statusBox.innerText = "ถูก";
-            statusBox.style.color = "var(--success)";
+            statusBox.classList.add('success-text');
             playAiVoice("คุณพูดถูกต้อง");
         } else {
             statusBox.innerText = "ผิด";
-            statusBox.style.color = "var(--danger)";
-            playAiVoice("คุณพูดไม่ชัด ลองอีกครั้ง"); // แก้ไขคำพูด AI ตามที่ขอ
+            statusBox.classList.add('danger-text');
+            playAiVoice("คุณพูดไม่ชัด ลองอีกครั้ง");
         }
     }
 </script>
