@@ -16,7 +16,8 @@
             --pastel-blue: #B2CEFE;
             --pastel-yellow: #FFFFD1;
             --pastel-green: #B2F2BB;
-            --pastel-purple: #D1B3FF; /* สีใหม่สำหรับปุ่มที่ 4 */
+            --pastel-purple: #D1B3FF;
+            --pastel-orange: #FFD1B3; /* สีใหม่สำหรับเมนูที่ 5 */
             --text-color: #5A5A5A;
         }
 
@@ -140,6 +141,7 @@
         .btn-2 { background: var(--pastel-yellow); box-shadow: 0 6px 0px #E6E6B8; }
         .btn-3 { background: var(--pastel-green); box-shadow: 0 6px 0px #A1DBAB; }
         .btn-4 { background: var(--pastel-purple); box-shadow: 0 6px 0px #B399FF; }
+        .btn-5 { background: var(--pastel-orange); box-shadow: 0 6px 0px #EBB18D; }
 
         .sub-menu-container {
             display: none;
@@ -241,12 +243,17 @@
                 เกมส์ใบ้คำตอบ
             </a>
 
-            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/Speech.html" class="btn btn-3" onclick="fireWorks()">
+            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/eng-app.html" class="btn btn-3" onclick="fireWorks()">
+                <span class="icon-box">💧</span>
+                สวนคำศัพท์หรรษา
+            </a>
+
+            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/Speech.html" class="btn btn-4" onclick="fireWorks()">
                 <span class="icon-box">🗣️</span>
                 ฝึกออกเสียง
             </a>
 
-            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/hbd.html" class="btn btn-4" onclick="fireWorks()">
+            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/hbd.html" class="btn btn-5" onclick="fireWorks()">
                 <span class="icon-box">🎂</span>
                 Happy Birthday Nobel
             </a>
@@ -264,10 +271,10 @@
 
         function fireWorks() {
             confetti({
-                particleCount: 120,
-                spread: 70,
+                particleCount: 150,
+                spread: 80,
                 origin: { y: 0.6 },
-                colors: ['#FFB7B2', '#B2CEFE', '#FFFFD1', '#B2F2BB', '#D1B3FF']
+                colors: ['#FFB7B2', '#B2CEFE', '#FFFFD1', '#B2F2BB', '#D1B3FF', '#FFD1B3']
             });
         }
 
