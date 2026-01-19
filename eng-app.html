@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Voice Chrome</title>
+    <style>
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px; font-family: sans-serif; }
+        button { padding: 20px 50px; font-size: 30px; cursor: pointer; border-radius: 10px; border: none; color: white; }
+        .en { background: #2196F3; }
+        .th { background: #4CAF50; }
+    </style>
+</head>
+<body>
+
+    <button class="en" onclick="playEn()">1. อ่านอังกฤษ (CAT)</button>
+    <button class="th" onclick="playTh()">2. อ่านไทย (แมว)</button>
+
+    <script>
+        // ฟังก์ชันอ่านอังกฤษ
+        function playEn() {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance("CAT");
+            msg.lang = 'en-US';
+            msg.rate = 0.5;
+            window.speechSynthesis.speak(msg);
+        }
+
+        // ฟังก์ชันอ่านไทย
+        function playTh() {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance("แมว");
+            
+            // ค้นหาเสียงภาษาไทยใน Chrome
+            const voices = window.speechSynthesis.getVoices();
+            const thaiVoice = voices.find(v => v.lang.includes('th'));
+            
+            if (thaiVoice) {
+                msg.voice = thaiVoice;
+            }
+            
+            msg.lang = 'th-TH';
+            msg.rate = 0.5;
+            
+            window.speechSynthesis.speak(msg);
+            
+            // บังคับให้ Chrome ปล่อยเสียง (Bug Fix)
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+        }
+
+        // อุ่นเครื่องโหลดเสียง
+        window.speechSynthesis.getVoices();
+    </script>
+</body>
+</html>
