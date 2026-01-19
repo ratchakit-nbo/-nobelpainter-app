@@ -3,330 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thai Pronunciation Lab - By พ่อโนเบล</title>
+    <title>ฝึกออกเสียงกับโนเบล - By พ่อโนเบล</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #ff781f; /* สีส้มหลัก */
-            --primary-dark: #e65c00;
-            --primary-light: #fff0e6;
-            --success: #27ae60;
-            --danger: #e74c3c;
-            --bg: #fff8f4;
+            /* Palette: Metallic Colors */
+            --mic-orange: linear-gradient(135deg, #ff9d5c 0%, #ff6b00 100%);
+            --mic-pink: linear-gradient(135deg, #ff74a4 0%, #ff2a6d 100%);
+            --mic-blue: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            --mic-green: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            
+            --bg-dark: #121212;
+            --container-bg: #1e1e1e;
+            --success: #2ecc71;
+            --danger: #ff4757;
+            --text-silver: #e0e0e0;
+            --shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
         }
 
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg);
+            background: var(--bg-dark);
+            background-image: radial-gradient(rgba(255, 107, 0, 0.1) 1px, transparent 1px);
+            background-size: 25px 25px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            color: #44332a;
+            padding: 15px;
+            color: var(--text-silver);
         }
 
         .container {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(255, 120, 31, 0.15);
+            background: var(--container-bg);
+            border-radius: 40px;
+            box-shadow: var(--shadow);
             width: 100%;
-            max-width: 450px;
+            max-width: 420px;
+            box-sizing: border-box;
             text-align: center;
-            border: 1px solid var(--primary-light);
+            border: 2px solid #333;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
         }
 
+        /* 1. ส่วนตั้งคำศัพท์ฝึกพูด (ด้านบนสุด - สีชมพู) */
         .setup-section {
-            margin-bottom: 1.5rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 2px dashed var(--primary-light);
+            background: var(--mic-pink);
+            padding: 1.5rem;
+            border-bottom: 5px solid rgba(0,0,0,0.2);
+        }
+
+        .label-text {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.8rem;
+            display: block;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
         }
 
         input[type="text"] {
-            width: 65%;
+            flex: 1;
             padding: 12px 15px;
-            border: 2px solid #ffe0cc;
+            border: none;
             border-radius: 15px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             outline: none;
-            transition: 0.2s;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 8px rgba(255, 120, 31, 0.2);
+            background: #fff;
+            color: #ff2a6d;
+            font-weight: bold;
         }
 
         .btn-set {
-            background: var(--primary);
+            background: #2f3542;
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 0 20px;
             border-radius: 15px;
-            margin-left: 5px;
             cursor: pointer;
             font-weight: bold;
-            transition: 0.2s;
+            white-space: nowrap;
+            transition: 0.3s;
         }
 
-        .btn-set:hover { background: var(--primary-dark); }
-
-        .target-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin: 1.5rem 0;
+        /* 2. ส่วนแสดงคำศัพท์ (สีส้ม) */
+        .target-box {
+            padding: 2rem 1rem;
+            background: var(--mic-orange);
+            margin: 0;
+            border-bottom: 2px solid #333;
         }
 
         .target-display {
-            font-size: 2.5rem;
+            font-size: clamp(2rem, 10vw, 3.5rem); 
             font-weight: 800;
-            color: var(--primary-dark);
-            word-wrap: break-word;
+            color: #fff;
+            margin: 0;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
         .btn-speaker {
-            background: var(--primary-light);
-            border: none;
-            border-radius: 50%;
-            width: 55px;
-            height: 55px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            font-size: 1.8rem;
-            color: var(--primary);
-        }
-
-        .btn-speaker:hover { 
-            background: var(--primary); 
-            color: white;
-            transform: scale(1.1) rotate(-10deg);
-        }
-
-        .score-circle {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            border: 10px solid #fff5ee;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto 1.5rem;
-            transition: 0.5s;
             background: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+            margin-top: 15px;
+            transition: 0.3s;
         }
 
-        .score-num { font-size: 2.4rem; font-weight: bold; }
-        .score-unit { font-size: 0.9rem; opacity: 0.8; }
+        /* 3. วงกลมสถานะ (สีเขียว) */
+        .status-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 8px solid #2a2a2a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem auto;
+            background: #000;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #2ecc71;
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 0 15px rgba(0,0,0,1);
+        }
 
+        /* 4. ปุ่มเริ่มพูดตอนนี้ (สีฟ้า) */
         .btn-main {
-            background: linear-gradient(135deg, #ff9d5c 0%, #ff781f 100%);
+            background: var(--mic-blue);
             color: white;
             border: none;
             padding: 1.2rem;
-            border-radius: 20px;
+            border-radius: 25px;
             font-size: 1.3rem;
-            font-weight: bold;
+            font-weight: 800;
             cursor: pointer;
-            width: 100%;
-            box-shadow: 0 8px 20px rgba(255, 120, 31, 0.3);
-            margin-bottom: 10px;
-            transition: 0.2s;
+            width: calc(100% - 40px);
+            box-shadow: 0 8px 20px rgba(0, 210, 255, 0.4);
+            transition: 0.3s;
+            margin: 0 20px 1rem 20px;
+            text-transform: uppercase;
         }
 
-        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255, 120, 31, 0.4); }
-        .btn-main:active { transform: translateY(0); }
-        .btn-main:disabled { background: #eee; color: #aaa; cursor: not-allowed; box-shadow: none; }
+        .btn-main:disabled { background: #444; opacity: 0.6; box-shadow: none; }
 
-        .result-text {
-            margin-top: 1rem;
-            padding: 1.2rem;
-            background: var(--primary-light);
-            border-radius: 15px;
-            font-style: italic;
-            color: #8a6d5c;
-            border: 1px solid #ffe0cc;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 12px;
+        /* 5. กล่องข้อความ (สีเขียว) */
+        .transcript-box {
+            margin: 1.2rem 20px;
             font-size: 0.9rem;
-            font-weight: bold;
-            margin-top: 5px;
+            color: #2ecc71; 
+            padding: 15px;
+            background: #000;
+            border-radius: 15px;
+            border: 1px solid #333;
+            word-break: break-all;
+            min-height: 20px;
+            font-family: 'Courier New', monospace;
         }
 
-        .status-waiting { background: #fdf2e9; color: #d35400; }
-        .status-listening { background: #d4f8e2; color: #1b5e20; animation: pulse 1s infinite; }
+        .home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: transparent;
+            color: #00d2ff;
+            border: 2px solid #00d2ff;
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: 0.3s;
+            margin: 1rem 20px;
+        }
+
+        .home-btn:hover { background: var(--mic-blue); color: #fff; }
 
         .credit {
-            margin-top: 2rem;
-            font-size: 0.9rem;
-            color: #b3a298;
-            border-top: 2px solid var(--primary-light);
-            padding-top: 1rem;
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: #666;
+            border-top: 1px solid #2a2a2a;
         }
-        .credit strong { color: var(--primary); }
+        .credit strong { color: #ff9d5c; }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .pulse-orange {
+            animation: pulse-ring 1.25s infinite;
+            border-color: #ff6b00 !important;
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.6) !important;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(.95); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.8; }
+            100% { transform: scale(.95); opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-	<button class="btn-speaker" onclick="window.location.href='https://ratchakit-nbo.github.io/-nobelpainter-app/game-nobel.html'">
-    🏠
-</button>
-	
     <div class="setup-section">
-        <p style="margin-top:0; font-weight:bold;">1. ตั้งค่าคำศัพท์ที่ต้องการ:</p>
-        <input type="text" id="wordInput" placeholder="พิมพ์คำศัพท์..." value="ตั้งใจเรียนนะ">
-        <button class="btn-set" onclick="updateTarget()">บันทึก</button>
+        <span class="label-text">ตั้งคำศัพท์ฝึกพูด</span>
+        <div class="input-group">
+            <input type="text" id="wordInput" placeholder="พิมพ์คำที่นี่..." value="สวัสดี">
+            <button class="btn-set" onclick="updateTarget()">ตกลง</button>
+        </div>
     </div>
 
-    <p style="color: #8a6d5c; margin-bottom: 0;">2. ฟังต้นแบบและทดสอบ:</p>
-    <div class="target-container">
-        <div class="target-display" id="targetWord">ตั้งใจเรียนนะ</div>
-        <button class="btn-speaker" onclick="playText()" title="กดเพื่อฟังเสียงอ่าน">🔊</button>
+    <div class="target-box">
+        <div class="target-display" id="targetWord">สวัสดี</div>
+        <button class="btn-speaker" onclick="playAiVoice(targetWord.innerText)">🔊</button>
     </div>
     
-    <div class="score-circle" id="circle">
-        <div class="score-num" id="scoreDisplay">0%</div>
-        <div class="score-unit">ความแม่นยำ</div>
-    </div>
+    <div class="status-circle" id="statusBox">?</div>
 
-    <button id="startBtn" class="btn-main">แตะเพื่อพูด</button>
+    <button id="startBtn" class="btn-main">เริ่มพูดตอนนี้</button>
     
-    <div id="statusBadge" class="status-badge status-waiting">สถานะ: พร้อมใช้งาน</div>
-    
-    <div class="result-text" id="transcript">รอรับฟังเสียงพูดของคุณ...</div>
+    <div class="transcript-box" id="transcript">ระบบรอรับฟังเสียงของคุณ...</div>
+
+    <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/game-nobel.html" class="home-btn">🏠 หน้าหลัก</a>
 
     <div class="credit">
-        พัฒนาโดย <strong>By-พ่อโนเบล</strong>
+        DESIGNED <strong>BY-พ่อโนเบล</strong>
     </div>
 </div>
 
 <script>
+    /* --- JavaScript คงเดิมตามไฟล์ Speech.html --- */
     const wordInput = document.getElementById('wordInput');
     const targetWord = document.getElementById('targetWord');
     const startBtn = document.getElementById('startBtn');
     const transcriptDisplay = document.getElementById('transcript');
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const statusBadge = document.getElementById('statusBadge');
-    const circle = document.getElementById('circle');
+    const statusBox = document.getElementById('statusBox');
 
-    // ระบบอ่านออกเสียงให้ฟัง
-    function playText() {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // หยุดเสียงเก่าก่อน
-            const msg = new SpeechSynthesisUtterance();
-            msg.text = targetWord.innerText;
-            msg.lang = 'th-TH';
-            msg.rate = 0.85; 
-            msg.pitch = 1;
-            window.speechSynthesis.speak(msg);
-        }
+    let mediaRecorder;
+    let audioChunks = [];
+    let recognition;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'th-TH';
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            statusBox.innerText = "Listening";
+            statusBox.style.fontSize = "1rem";
+            statusBox.style.color = "#ff6b00";
+            statusBox.classList.add('pulse-orange');
+            startBtn.disabled = true;
+            audioChunks = [];
+            if(mediaRecorder && mediaRecorder.state === 'inactive') mediaRecorder.start();
+        };
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[0][0].transcript;
+            transcriptDisplay.innerHTML = `คุณพูดว่า: <b style="color:#00d2ff">${spokenText}</b>`;
+            
+            if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+                
+                statusBox.innerText = "Voice";
+                statusBox.style.fontSize = "1.5rem";
+                audio.play();
+
+                audio.onended = () => {
+                    checkStrictMatch(targetWord.innerText, spokenText);
+                };
+            };
+        };
+
+        recognition.onerror = () => {
+            statusBox.innerText = "?";
+            startBtn.disabled = false;
+        };
+
+        recognition.onend = () => {
+            startBtn.disabled = false;
+            statusBox.classList.remove('pulse-orange');
+        };
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+        }).catch(err => {
+            transcriptDisplay.innerText = "กรุณาเปิดไมโครโฟน";
+        });
+
+    function playAiVoice(text) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'th-TH';
+        msg.rate = 0.9;
+        window.speechSynthesis.speak(msg);
     }
 
     function updateTarget() {
         const val = wordInput.value.trim();
         if (val) {
             targetWord.innerText = val;
-            resetUI();
+            statusBox.innerText = "?";
+            statusBox.style.fontSize = "2.2rem";
+            statusBox.style.color = "#2ecc71";
+            statusBox.style.borderColor = "#2a2a2a";
         }
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-        statusBadge.innerHTML = "❌ เบราว์เซอร์ไม่รองรับ Speech Recognition";
-        statusBadge.style.color = "red";
-    } else {
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'th-TH';
-        recognition.interimResults = false;
+    startBtn.onclick = () => {
+        if (recognition) recognition.start();
+    };
 
-        startBtn.onclick = () => {
-            try { recognition.start(); } catch (e) {}
-        };
-
-        recognition.onstart = () => {
-            statusBadge.innerText = "กำลังรับฟัง...";
-            statusBadge.className = "status-badge status-listening";
-            startBtn.disabled = true;
-            transcriptDisplay.innerText = "พูดประโยคข้างบนได้เลยครับ...";
-        };
-
-        recognition.onresult = (event) => {
-            const spokenText = event.results[0][0].transcript;
-            transcriptDisplay.innerText = `คุณพูดว่า: "${spokenText}"`;
-            calculateScore(targetWord.innerText, spokenText);
-        };
-
-        recognition.onerror = (event) => {
-            startBtn.disabled = false;
-            statusBadge.className = "status-badge status-waiting";
-            if (event.error === 'no-speech') {
-                statusBadge.innerText = "สถานะ: ไม่พบเสียงพูด";
-            } else {
-                statusBadge.innerText = "สถานะ: เกิดข้อผิดพลาด";
-            }
-        };
-
-        recognition.onend = () => {
-            startBtn.disabled = false;
-            if (statusBadge.className.includes("listening")) {
-                statusBadge.className = "status-badge status-waiting";
-            }
-        };
-    }
-
-    function resetUI() {
-        scoreDisplay.innerText = "0%";
-        circle.style.borderColor = "#fff5ee";
-        circle.style.color = "#44332a";
-        transcriptDisplay.innerText = "รอรับฟังเสียงพูดของคุณ...";
-        statusBadge.innerText = "สถานะ: พร้อมใช้งาน";
-    }
-
-    function calculateScore(target, spoken) {
-        const t = target.trim();
-        const s = spoken.trim();
+    function checkStrictMatch(target, spoken) {
+        const isMatch = target.trim() === spoken.trim();
+        statusBox.style.fontSize = "2.5rem";
         
-        if (t === s) {
-            updateUI(100);
-            return;
-        }
-
-        const targetArr = Array.from(t);
-        const spokenArr = Array.from(s);
-        let matches = 0;
-
-        targetArr.forEach(char => {
-            if (spokenArr.includes(char)) matches++;
-        });
-
-        let score = Math.round((matches / Math.max(t.length, s.length)) * 100);
-        updateUI(score > 100 ? 100 : score);
-    }
-
-    function updateUI(score) {
-        scoreDisplay.innerText = score + "%";
-        if (score >= 80) {
-            circle.style.borderColor = "var(--success)";
-            circle.style.color = "var(--success)";
-        } else if (score >= 50) {
-            circle.style.borderColor = "var(--warning)";
-            circle.style.color = "var(--warning)";
+        if (isMatch) {
+            statusBox.innerText = "ถูก";
+            statusBox.style.color = "var(--success)";
+            statusBox.style.borderColor = "var(--success)";
+            playAiVoice("คุณพูดถูกต้อง");
         } else {
-            circle.style.borderColor = "var(--danger)";
-            circle.style.color = "var(--danger)";
+            statusBox.innerText = "ผิด";
+            statusBox.style.color = "var(--danger)";
+            statusBox.style.borderColor = "var(--danger)";
+            playAiVoice("คุณพูดผิด");
         }
     }
 </script>
