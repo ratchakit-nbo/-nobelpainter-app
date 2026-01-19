@@ -28,6 +28,7 @@
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
 
+        /* HUD */
         #hud {
             padding: 10px 15px; background: rgba(255, 255, 255, 0.2); 
             backdrop-filter: blur(10px); color: #2e7d32;
@@ -37,12 +38,31 @@
 
         #garden-view { flex: 1.2; position: relative; width: 100%; }
 
-        .animal { 
-            position: absolute; bottom: 10px; z-index: 10; 
-            font-size: 40px; transition: left 3.5s ease-in-out, transform 0.3s;
-            user-select: none; pointer-events: none;
+        /* ก้อนเมฆ (คืนค่า) */
+        .cloud {
+            position: absolute; background: white; border-radius: 50px;
+            width: 80px; height: 30px; opacity: 0.8;
+            animation: moveClouds 25s infinite linear; z-index: 1;
+        }
+        .cloud::before, .cloud::after { content: ''; position: absolute; background: white; border-radius: 50%; }
+        .cloud::before { width: 40px; height: 40px; top: -15px; left: 10px; }
+        .cloud::after { width: 30px; height: 30px; top: -10px; right: 10px; }
+        @keyframes moveClouds { from { left: -100px; } to { left: 110%; } }
+
+        /* พระอาทิตย์ (เคลื่อนไหว) */
+        .sun { 
+            position: absolute; width: 60px; height: 60px; 
+            background: radial-gradient(circle, #fff200, #ff9800); 
+            border-radius: 50%; top: 30px; right: 30px; 
+            box-shadow: 0 0 30px #ffeb3b; z-index: 1; 
+            animation: sunPulse 4s infinite ease-in-out;
+        }
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.1); filter: brightness(1.2); }
         }
 
+        /* พื้นที่ลากวาง */
         #match-side {
             flex: 1; background: rgba(255, 255, 255, 0.92);
             padding: 10px; border-top: 5px solid #4e342e;
@@ -50,6 +70,7 @@
             overflow-y: auto; z-index: 10;
         }
 
+        /* หยดน้ำ */
         .word-item {
             position: absolute; width: 65px; height: 85px;
             background: linear-gradient(135deg, #4fc3f7, #0288d1); 
@@ -63,7 +84,7 @@
 
         .drop-zone {
             background: #fdfdfd; border: 2px solid #ddd; border-radius: 12px;
-            padding: 5px; text-align: center; font-size: 14px; font-weight: bold; color: #333;
+            padding: 5px; text-align: center; font-size: 15px; font-weight: bold; color: #333;
             display: flex; align-items: center; justify-content: center; height: 50px;
         }
         .drop-zone.matched { background: #81c784; color: white; border-color: transparent; }
@@ -78,7 +99,7 @@
         .home-btn { position: absolute; bottom: 5px; left: 10px; font-size: 10px; color: #fff; text-decoration: none; opacity: 0.8; }
         #credit { position: absolute; bottom: 5px; right: 10px; font-size: 10px; color: #fff; opacity: 0.8; }
 
-        .sun { position: absolute; width: 50px; height: 50px; background: #ffeb3b; border-radius: 50%; top: 20px; right: 20px; box-shadow: 0 0 20px #ffeb3b; z-index: 1; }
+        .animal { position: absolute; bottom: 10px; z-index: 10; font-size: 40px; transition: left 3.5s ease-in-out, transform 0.3s; user-select: none; pointer-events: none; }
         .garden-item { position: absolute; bottom: 0; z-index: 5; }
     </style>
 </head>
@@ -93,6 +114,9 @@
 
     <div id="garden-view">
         <div class="sun"></div>
+        <div class="cloud" style="top: 40px; animation-duration: 30s;"></div>
+        <div class="cloud" style="top: 80px; animation-duration: 45s; animation-delay: -10s;"></div>
+        
         <div id="garden-items-layer">
             <svg id="main-tree" class="garden-item" style="left:50%; transform:translateX(-50%);" width="100" height="130" viewBox="0 0 100 100">
                 <rect x="42" y="70" width="16" height="30" fill="#5D4037" />
@@ -115,44 +139,33 @@
 <script>
     let score = 0, level = 1, activeWords = [];
     let animals = [{emoji: '🐶', pos: 50}];
-    const animalList = ['🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐷', '🐸', '🐵', '🐹', '🐥'];
+    const animalList = ['🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐷', '🐸', '🐵'];
 
-    // ปรับการอ่าน: อังกฤษ -> เว้น 0.1 วิ -> ไทย
     function playFullAudio(en, th) {
         window.speechSynthesis.cancel();
-        
         const msgEn = new SpeechSynthesisUtterance(en);
-        msgEn.lang = 'en-US';
-        msgEn.rate = 0.8;
-
+        msgEn.lang = 'en-US'; msgEn.rate = 0.8;
         msgEn.onend = () => {
             if (th) {
-                // เว้นจังหวะสั้นมาก 0.1 วินาที (100ms)
                 setTimeout(() => {
                     const msgTh = new SpeechSynthesisUtterance(th);
-                    msgTh.lang = 'th-TH';
-                    msgTh.rate = 0.95; // ปรับไทยให้เร็วขึ้นเล็กน้อยเพื่อให้เข้ากัน
+                    msgTh.lang = 'th-TH'; msgTh.rate = 0.9;
                     window.speechSynthesis.speak(msgTh);
                 }, 100); 
             }
         };
-
         window.speechSynthesis.speak(msgEn);
     }
 
     async function spawnFiveWords() {
         if (activeWords.length > 0) return;
         const btn = document.getElementById('spawn-btn');
-        btn.disabled = true;
-        btn.innerText = "⏳ กำลังสุ่ม...";
-
+        btn.disabled = true; btn.innerText = "⏳ รอสักครู่...";
         for (let i = 0; i < 5; i++) {
             await fetchWord();
-            await new Promise(r => setTimeout(r, 150));
+            await new Promise(r => setTimeout(r, 200));
         }
-
-        btn.disabled = false;
-        btn.innerText = "💧 รดน้ำสวน";
+        btn.disabled = false; btn.innerText = "💧 รดน้ำสวน";
     }
 
     async function fetchWord() {
@@ -161,14 +174,17 @@
             const data = await res.json();
             const filtered = data.filter(d => d.word.length > 2 && d.word.length < 8);
             let word = filtered[Math.floor(Math.random() * filtered.length)].word.toUpperCase();
-
-            if (activeWords.some(w => w.en === word)) return fetchWord();
-
-            const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${word}&langpair=en|th`);
+            
+            // ใช้ Google Translate API (Free Bridge) เพื่อความแม่นยำและไม่เป็นค่าว่าง
+            const transRes = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=th&dt=t&q=${encodeURIComponent(word)}`);
             const transData = await transRes.json();
-            let th = transData.responseData.translatedText.split(/[ ,;]/)[0];
+            let th = transData[0][0][0];
 
-            createElements({ en: word, th: th, id: 'w' + Math.random().toString(36).substr(2, 5) });
+            if (th && th !== word) {
+                createElements({ en: word, th: th, id: 'w' + Math.random().toString(36).substr(2, 5) });
+            } else {
+                await fetchWord(); // ถ้าแปลไม่ได้ให้สุ่มใหม่
+            }
         } catch (e) { console.log("API Error"); }
     }
 
@@ -177,15 +193,13 @@
         const el = document.createElement('div');
         el.className = 'word-item'; el.id = obj.id;
         el.innerHTML = `<span class="word-text">${obj.en}</span>`;
-        el.style.left = (Math.random() * 70 + 5) + '%';
-        el.style.top = '5%';
+        el.style.left = (Math.random() * 70 + 5) + '%'; el.style.top = '5%';
         document.getElementById('words-container').appendChild(el);
         
         el.addEventListener('touchstart', (e) => { 
             activeDrag = el; 
-            const utterance = new SpeechSynthesisUtterance(obj.en);
-            utterance.lang = 'en-US';
-            window.speechSynthesis.speak(utterance);
+            const ut = new SpeechSynthesisUtterance(obj.en); ut.lang = 'en-US';
+            window.speechSynthesis.speak(ut);
         }, {passive: false});
         el.addEventListener('touchmove', handleTouchMove, {passive: false});
         el.addEventListener('touchend', handleTouchEnd);
@@ -194,10 +208,7 @@
         zone.className = 'drop-zone'; zone.id = 'z' + obj.id; zone.innerText = obj.th;
         document.getElementById('match-side').appendChild(zone);
 
-        setTimeout(() => { 
-            el.style.transition = "top 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)"; 
-            el.style.top = '72%'; 
-        }, 50);
+        setTimeout(() => { el.style.transition = "top 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)"; el.style.top = '72%'; }, 50);
     }
 
     let activeDrag = null;
@@ -216,24 +227,16 @@
         const rect = activeDrag.getBoundingClientRect();
         const zone = document.getElementById('z' + activeDrag.id);
         const zoneRect = zone.getBoundingClientRect();
-
-        if (rect.left < zoneRect.right && rect.right > zoneRect.left && 
-            rect.top < zoneRect.bottom && rect.bottom > zoneRect.top) {
-            
+        if (rect.left < zoneRect.right && rect.right > zoneRect.left && rect.top < zoneRect.bottom && rect.bottom > zoneRect.top) {
             const word = activeWords.find(w => w.id === activeDrag.id);
-            zone.className = 'drop-zone matched';
-            zone.innerText = "✅ " + word.en;
-            
+            zone.className = 'drop-zone matched'; zone.innerText = "✅ " + word.en;
             playFullAudio(word.en, word.th);
-            
             activeDrag.remove();
             activeWords = activeWords.filter(w => w.id !== activeDrag.id);
-            score++;
-            document.getElementById('score').innerText = score;
-            if (score >= 5) setTimeout(levelUp, 1000); // ลดเวลาหน่วงก่อนขึ้นเลเวลใหม่เพื่อให้กระชับขึ้น
+            score++; document.getElementById('score').innerText = score;
+            if (score >= 5) setTimeout(levelUp, 1000);
         } else {
-            activeDrag.style.transition = "all 0.5s";
-            activeDrag.style.top = '72%';
+            activeDrag.style.transition = "all 0.5s"; activeDrag.style.top = '72%';
             activeDrag.style.left = (Math.random() * 70 + 5) + '%';
         }
         activeDrag = null;
@@ -266,10 +269,7 @@
             let move = (Math.random() * 20) - 10;
             ani.pos = Math.max(5, Math.min(85, ani.pos + move));
             const el = document.getElementById('ani-' + i);
-            if (el) { 
-                el.style.left = ani.pos + '%'; 
-                el.style.transform = move > 0 ? 'scaleX(1)' : 'scaleX(-1)'; 
-            }
+            if (el) { el.style.left = ani.pos + '%'; el.style.transform = move > 0 ? 'scaleX(1)' : 'scaleX(-1)'; }
         });
     }, 3500);
 
