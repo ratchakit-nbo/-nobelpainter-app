@@ -122,13 +122,6 @@
             justify-content: center;
             font-size: 1.25rem;
             color: white;
-            transition: 0.3s;
-        }
-
-        .btn-mute.active {
-            background: var(--danger-neon);
-            border-color: transparent;
-            box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
         }
 
         .status-area {
@@ -187,6 +180,7 @@
             border-radius: 16px;
             min-height: 24px;
             border: 1px solid var(--border);
+            text-align: center;
         }
 
         .home-btn {
@@ -204,10 +198,11 @@
             font-size: 0.7rem;
             color: #444;
             letter-spacing: 1.5px;
+            text-align: center;
         }
 
-        .success-text { color: var(--success-neon) !important; }
-        .danger-text { color: var(--danger-neon) !important; }
+        .success-text { color: var(--success-neon) !important; border-color: var(--success-neon) !important; }
+        .danger-text { color: var(--danger-neon) !important; border-color: var(--danger-neon) !important; }
 
     </style>
 </head>
@@ -226,7 +221,7 @@
         <div class="target-display" id="targetWord">สวัสดี</div>
         <div class="control-row">
             <button class="btn-round" onclick="playAiVoice(targetWord.innerText)">🔊</button>
-            <button id="muteBtn" class="btn-round btn-mute" onclick="toggleMute()">🎤</button>
+            <button id="muteBtn" class="btn-round" onclick="toggleMute()">🎤</button>
         </div>
     </div>
     
@@ -247,33 +242,46 @@
     const wordInput = document.getElementById('wordInput');
     const targetWord = document.getElementById('targetWord');
     const startBtn = document.getElementById('startBtn');
-    const muteBtn = document.getElementById('muteBtn');
     const transcriptDisplay = document.getElementById('transcript');
     const statusBox = document.getElementById('statusBox');
 
     let mediaRecorder;
     let audioChunks = [];
     let recognition;
-    let isMuted = false;
     let lastResult = "";
+    let audioContext;
+    let analyser;
 
+    // ระบบกรองเสียงดังที่สุด
     async function setupMic() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: { echoCancellation: true, noiseSuppression: true } 
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
             });
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            
             mediaRecorder = new MediaRecorder(stream);
             mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+            
             mediaRecorder.onstop = () => {
                 if (audioChunks.length > 0) {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                     const audioUrl = URL.createObjectURL(audioBlob);
                     const userVoice = new Audio(audioUrl);
+                    
                     statusBox.innerText = "CHECKING";
-                    statusBox.classList.remove('pulse-active');
+                    statusBox.className = "status-circle";
+                    
                     userVoice.play();
                     userVoice.onended = () => {
-                        setTimeout(() => { checkStrictMatch(targetWord.innerText, lastResult); }, 400);
+                        // หน่วงเวลาเพื่อให้แน่ใจว่า Recognition ประมวลผลเสร็จแล้ว
+                        setTimeout(() => {
+                            checkStrictMatch(targetWord.innerText, lastResult);
+                        }, 600);
                     };
                 }
             };
@@ -285,57 +293,91 @@
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.lang = 'th-TH';
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
         recognition.onstart = () => {
             statusBox.innerText = "LISTENING";
-            statusBox.classList.add('pulse-active');
+            statusBox.className = "status-circle pulse-active";
             startBtn.disabled = true;
             audioChunks = [];
-            lastResult = "";
+            lastResult = ""; 
             if(mediaRecorder && mediaRecorder.state === 'inactive') mediaRecorder.start();
+            
+            // ตรวจจับความดังของเสียงระหว่างพูด
+            checkVolume();
         };
+
         recognition.onresult = (event) => {
+            // จับผลลัพธ์แรกที่ชัดเจนที่สุด
             lastResult = event.results[0][0].transcript;
             transcriptDisplay.innerHTML = `You said: <b style="color:var(--accent-cyan)">${lastResult}</b>`;
-            recognition.stop();
         };
+
         recognition.onend = () => {
-            setTimeout(() => { if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 300);
-            if (!isMuted) startBtn.disabled = false;
+            statusBox.classList.remove('pulse-active');
+            setTimeout(() => {
+                if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            }, 200);
+            startBtn.disabled = false;
         };
+    }
+
+    function checkVolume() {
+        if (!analyser) return;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+        let values = 0;
+        for (let i = 0; i < dataArray.length; i++) { values += dataArray[i]; }
+        let average = values / dataArray.length;
+        
+        // ถ้าค่าความดังเฉลี่ย (average) น้อยเกินไป (เสียงแทรกเบาๆ) Recognition มักจะคืนค่าว่าง
+        if (mediaRecorder.state === 'recording') {
+            requestAnimationFrame(checkVolume);
+        }
     }
 
     function playAiVoice(text) {
-        window.speechSynthesis.cancel();
-        setTimeout(() => {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'th-TH';
-            window.speechSynthesis.speak(msg);
-        }, 150);
-    }
-
-    function toggleMute() {
-        isMuted = !isMuted;
-        muteBtn.innerText = isMuted ? "🔇" : "🎤";
-        muteBtn.classList.toggle('active', isMuted);
-        startBtn.disabled = isMuted;
-        statusBox.innerText = isMuted ? "OFF" : "READY";
+        window.speechSynthesis.cancel(); 
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'th-TH';
+        msg.rate = 1.0;
+        msg.volume = 1.0; // บังคับความดัง AI สูงสุด
+        window.speechSynthesis.speak(msg);
     }
 
     function updateTarget() {
         targetWord.innerText = wordInput.value.trim() || "สวัสดี";
         statusBox.innerText = "READY";
         statusBox.className = "status-circle";
+        transcriptDisplay.innerText = "Waiting for your voice...";
     }
 
-    startBtn.onclick = () => { if (recognition && !isMuted) recognition.start(); };
+    startBtn.onclick = () => { 
+        if (recognition) {
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+            try { recognition.start(); } catch(e) { recognition.stop(); }
+        }
+    };
 
     function checkStrictMatch(target, spoken) {
         const cleanSpoken = spoken.trim().replace(/\s+/g, '');
         const cleanTarget = target.trim().replace(/\s+/g, '');
-        const isMatch = cleanSpoken.includes(cleanTarget);
         
         statusBox.className = "status-circle";
-        if (isMatch && cleanSpoken !== "") {
+
+        // ตรวจสอบว่ามีการพูดหรือไม่ (กันเสียงแทรกที่เงียบเกินไป)
+        if (cleanSpoken === "") {
+            statusBox.innerText = "ผิด";
+            statusBox.classList.add('danger-text');
+            playAiVoice("คุณพูดไม่ชัด ลองอีกครั้ง");
+            return;
+        }
+
+        // เช็กว่าคำเป้าหมายอยู่ในประโยคที่ดังที่สุดหรือไม่
+        const isMatch = cleanSpoken.includes(cleanTarget);
+        
+        if (isMatch) {
             statusBox.innerText = "ถูก";
             statusBox.classList.add('success-text');
             playAiVoice("คุณพูดถูกต้อง");
