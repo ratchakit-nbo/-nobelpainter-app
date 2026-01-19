@@ -16,6 +16,7 @@
             --pastel-blue: #B2CEFE;
             --pastel-yellow: #FFFFD1;
             --pastel-green: #B2F2BB;
+            --pastel-purple: #D1B3FF; /* สีใหม่สำหรับปุ่มที่ 4 */
             --text-color: #5A5A5A;
         }
 
@@ -32,19 +33,16 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            /* แก้ไขพื้นหลังไล่เฉดสีให้ครอบคลุมทั้งหน้าแม้ตอนเลื่อน */
             background: linear-gradient(180deg, #A1C4FD 0%, #C2E9FB 100%);
             background-attachment: fixed; 
-            /* อนุญาตให้เลื่อนหน้าจอได้หากเนื้อหายาวเกิน */
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 80px 20px 40px 20px; /* เพิ่ม Padding ด้านบนเพื่อให้ไอคอนยิ้มไม่ถูกตัด */
+            padding: 80px 20px 40px 20px;
             position: relative;
         }
 
-        /* เมฆเคลื่อนไหวพื้นหลัง */
         .cloud-bg {
-            position: fixed; /* เปลี่ยนเป็น fixed เพื่อให้เมฆอยู่ตำแหน่งเดิมตอนเลื่อน */
+            position: fixed;
             background: white;
             width: 100px;
             height: 35px;
@@ -67,7 +65,6 @@
             to { left: 110%; }
         }
 
-        /* อนิเมชั่นลอยนุ่มๆ */
         @keyframes floatingEffect {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-15px); }
@@ -142,6 +139,7 @@
         .btn-1 { background: var(--pastel-blue); box-shadow: 0 6px 0px #A1BDEE; }
         .btn-2 { background: var(--pastel-yellow); box-shadow: 0 6px 0px #E6E6B8; }
         .btn-3 { background: var(--pastel-green); box-shadow: 0 6px 0px #A1DBAB; }
+        .btn-4 { background: var(--pastel-purple); box-shadow: 0 6px 0px #B399FF; }
 
         .sub-menu-container {
             display: none;
@@ -247,6 +245,11 @@
                 <span class="icon-box">🗣️</span>
                 ฝึกออกเสียง
             </a>
+
+            <a href="https://ratchakit-nbo.github.io/-nobelpainter-app/hbd.html" class="btn btn-4" onclick="fireWorks()">
+                <span class="icon-box">🎂</span>
+                Happy Birthday Nobel
+            </a>
         </div>
 
         <footer>
@@ -264,7 +267,7 @@
                 particleCount: 120,
                 spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#FFB7B2', '#B2CEFE', '#FFFFD1', '#B2F2BB']
+                colors: ['#FFB7B2', '#B2CEFE', '#FFFFD1', '#B2F2BB', '#D1B3FF']
             });
         }
 
