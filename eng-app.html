@@ -117,32 +117,38 @@
     let animals = [{emoji: '🐶', pos: 50}];
     const animalList = ['🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐷', '🐸', '🐵', '🐹', '🐥'];
 
-    function playAudio(en, th) {
+    // ปรับการอ่าน: อังกฤษ -> เว้น 0.1 วิ -> ไทย
+    function playFullAudio(en, th) {
         window.speechSynthesis.cancel();
+        
         const msgEn = new SpeechSynthesisUtterance(en);
-        msgEn.lang = 'en-US'; msgEn.rate = 0.8;
+        msgEn.lang = 'en-US';
+        msgEn.rate = 0.8;
+
         msgEn.onend = () => {
             if (th) {
+                // เว้นจังหวะสั้นมาก 0.1 วินาที (100ms)
                 setTimeout(() => {
                     const msgTh = new SpeechSynthesisUtterance(th);
-                    msgTh.lang = 'th-TH'; window.speechSynthesis.speak(msgTh);
-                }, 400);
+                    msgTh.lang = 'th-TH';
+                    msgTh.rate = 0.95; // ปรับไทยให้เร็วขึ้นเล็กน้อยเพื่อให้เข้ากัน
+                    window.speechSynthesis.speak(msgTh);
+                }, 100); 
             }
         };
+
         window.speechSynthesis.speak(msgEn);
     }
 
-    // ฟังก์ชันรดน้ำแล้วได้ 5 คำ
     async function spawnFiveWords() {
-        if (activeWords.length > 0) return; // ป้องกันการกดซ้ำขณะที่ยังมีคำเก่าอยู่
+        if (activeWords.length > 0) return;
         const btn = document.getElementById('spawn-btn');
         btn.disabled = true;
         btn.innerText = "⏳ กำลังสุ่ม...";
 
         for (let i = 0; i < 5; i++) {
             await fetchWord();
-            // หน่วงเวลาเล็กน้อยเพื่อให้หยดน้ำทยอยตกลงมาสวยๆ
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 150));
         }
 
         btn.disabled = false;
@@ -156,10 +162,7 @@
             const filtered = data.filter(d => d.word.length > 2 && d.word.length < 8);
             let word = filtered[Math.floor(Math.random() * filtered.length)].word.toUpperCase();
 
-            // ป้องกันคำซ้ำในรอบเดียวกัน
-            if (activeWords.some(w => w.en === word)) {
-                return fetchWord();
-            }
+            if (activeWords.some(w => w.en === word)) return fetchWord();
 
             const transRes = await fetch(`https://api.mymemory.translated.net/get?q=${word}&langpair=en|th`);
             const transData = await transRes.json();
@@ -180,7 +183,9 @@
         
         el.addEventListener('touchstart', (e) => { 
             activeDrag = el; 
-            playAudio(obj.en, ""); 
+            const utterance = new SpeechSynthesisUtterance(obj.en);
+            utterance.lang = 'en-US';
+            window.speechSynthesis.speak(utterance);
         }, {passive: false});
         el.addEventListener('touchmove', handleTouchMove, {passive: false});
         el.addEventListener('touchend', handleTouchEnd);
@@ -218,13 +223,14 @@
             const word = activeWords.find(w => w.id === activeDrag.id);
             zone.className = 'drop-zone matched';
             zone.innerText = "✅ " + word.en;
-            playAudio(word.en, word.th);
+            
+            playFullAudio(word.en, word.th);
             
             activeDrag.remove();
             activeWords = activeWords.filter(w => w.id !== activeDrag.id);
             score++;
             document.getElementById('score').innerText = score;
-            if (score >= 5) setTimeout(levelUp, 1200);
+            if (score >= 5) setTimeout(levelUp, 1000); // ลดเวลาหน่วงก่อนขึ้นเลเวลใหม่เพื่อให้กระชับขึ้น
         } else {
             activeDrag.style.transition = "all 0.5s";
             activeDrag.style.top = '72%';
