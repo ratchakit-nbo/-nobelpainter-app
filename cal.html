@@ -4,96 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบทดสอบสูตรคูณทีละแม่</title>
+    <title>แบบทดสอบสูตรคูณแสนสนุก</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #6366f1;
-            --secondary: #8b5cf6;
-            --bg: #f5f3ff;
-            --white: #ffffff;
-            --text: #1f2937;
-        }
-        body { font-family: 'Kanit', sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: var(--white); padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--primary); }
-        .selector { text-align: center; margin-bottom: 20px; }
-        select { padding: 10px 20px; font-size: 1.2rem; border-radius: 12px; border: 2px solid var(--primary); }
-        .btn { display: block; width: 100%; padding: 15px; border: none; border-radius: 12px; background: var(--primary); color: white; font-size: 1.1rem; cursor: pointer; margin-top: 10px; }
-        .question-row { margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 12px; }
-        .choices { display: flex; gap: 10px; margin-top: 10px; }
-        .choice-btn { padding: 8px 15px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; }
-        .choice-btn:hover { background: #e0e7ff; }
-        #result { margin-top: 20px; font-weight: bold; text-align: center; }
+        :root { --primary: #6366f1; --bg: #f5f3ff; }
+        body { font-family: 'Kanit', sans-serif; background-color: var(--bg); padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .question-row { margin: 15px 0; padding: 15px; border-bottom: 1px solid #eee; }
+        .choices { display: flex; gap: 10px; margin-top: 5px; }
+        .choice-btn { padding: 5px 12px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; }
+        .choice-btn.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .correct { color: green; font-weight: bold; }
+        .wrong { color: red; font-weight: bold; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h1>🔢 ทดสอบสูตรคูณ</h1>
-    <div class="selector">
-        <label>เลือกแม่สูตรคูณ:</label>
-        <select id="tableSelect">
-            <!-- JS เติมแม่ 2-12 -->
-        </select>
-        <button class="btn" onclick="startQuiz()">เริ่มทดสอบ</button>
-    </div>
+    <select id="tableSelect"></select>
+    <button onclick="startQuiz()">เริ่มทดสอบ</button>
     <div id="quizArea"></div>
+    <button id="checkBtn" class="hidden" onclick="checkAnswers()">ตรวจคำตอบ</button>
     <div id="result"></div>
 </div>
-
 <script>
-    let currentQuiz = [];
     const tableSelect = document.getElementById('tableSelect');
-    
-    // สร้าง option 2-12
     for(let i=2; i<=12; i++) tableSelect.innerHTML += `<option value="${i}">แม่ ${i}</option>`;
-
-    function getWrongChoices(ans) {
-        let choices = new Set([ans]);
-        while(choices.size < 4) {
-            let offset = Math.floor(Math.random() * 6) - 3; // -3 ถึง 2
-            let val = ans + offset;
-            if(val > 0 && val !== ans) choices.add(val);
-        }
-        return Array.from(choices).sort(() => Math.random() - 0.5);
-    }
+    
+    let currentQuiz = [];
+    let userAnswers = {};
 
     function startQuiz() {
         const table = parseInt(tableSelect.value);
         let multipliers = Array.from({length: 12}, (_, i) => i + 1);
         multipliers.sort(() => Math.random() - 0.5);
-        let selected = multipliers.slice(0, 5); // เลือก 5 ข้อ
+        let selected = multipliers.slice(0, 5).sort((a,b) => a-b);
         
+        currentQuiz = [];
+        userAnswers = {};
         const quizArea = document.getElementById('quizArea');
         quizArea.innerHTML = `<h3>กำลังทดสอบ: แม่ ${table}</h3>`;
-        currentQuiz = [];
-
+        
         selected.forEach((m, idx) => {
             let ans = table * m;
-            let choices = getWrongChoices(ans);
-            currentQuiz.push({ans, id: idx});
+            let choices = [ans, ans+1, ans-1, ans+2].sort(() => Math.random() - 0.5);
+            currentQuiz.push({ans, id: idx, m});
             
-            quizArea.innerHTML += `
-                <div class="question-row">
-                    ${table} × ${m} = ?
-                    <div class="choices">
-                        ${choices.map(c => `<button class="choice-btn" onclick="check(${idx}, ${c})">${c}</button>`).join('')}
-                    </div>
+            quizArea.innerHTML += `<div class="question-row">
+                ${table} × ${m} = ? <br>
+                <div class="choices" id="q${idx}">
+                    ${choices.map(c => `<button class="choice-btn" onclick="select(${idx}, ${c})">${c}</button>`).join('')}
                 </div>
-            `;
+                <div id="ans${idx}"></div>
+            </div>`;
         });
+        document.getElementById('checkBtn').classList.remove('hidden');
         document.getElementById('result').innerHTML = '';
     }
 
-    let userScores = {};
-    function check(idx, val) {
-        userScores[idx] = (val === currentQuiz[idx].ans);
-        alert(val === currentQuiz[idx].ans ? "ถูกต้อง!" : "ผิดครับ");
-        if(Object.keys(userScores).length === 5) {
-            let score = Object.values(userScores).filter(v => v).length;
-            document.getElementById('result').innerHTML = `จบการทดสอบ! คะแนนของคุณ: ${score}/5`;
-        }
+    function select(idx, val) {
+        userAnswers[idx] = val;
+        document.querySelectorAll(`#q${idx} .choice-btn`).forEach(btn => {
+            btn.classList.toggle('selected', parseInt(btn.innerText) === val);
+        });
+    }
+
+    function checkAnswers() {
+        let score = 0;
+        currentQuiz.forEach((q, idx) => {
+            let div = document.getElementById(`ans${idx}`);
+            if (userAnswers[idx] === q.ans) {
+                div.innerHTML = `<span class="correct">ถูกต้อง!</span>`;
+                score++;
+            } else {
+                div.innerHTML = `<span class="wrong">ผิด! คำตอบที่ถูกคือ ${q.ans}</span>`;
+            }
+        });
+        document.getElementById('result').innerHTML = `คะแนนรวม: ${score}/5`;
     }
 </script>
 </body>
