@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- สร้าง Window
 local Window = Rayfield:CreateWindow({
-   Name = "พ่อโนเบล v2.0",
+   Name = "พ่อโนเบล v99.0",
    Icon = nil,
    LoadingTitle = "ยินดีต้อนรับ สคริปต์ของ พ่อโนเบล",
    LoadingSubtitle = "power panel team",
