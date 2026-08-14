@@ -87,36 +87,56 @@ local function toggleSpeed(on)
     Rayfield:Notify({Title = superSpeed and "วิ่งเร็วเปิด" or "วิ่งเร็วปิด", Content = superSpeed and "วิ่งเร็วสุดขีด!" or "กลับสู่ความเร็วปกติ", Duration = 3, Image = 6023426921})
 end
 
--- === ฟังก์ชันอมตะ (Godmode Safe) ===
+-- === ฟังก์ชันอมตะ (Godmode Effective & Safe) ===
 local isGodMode = false
-local godModeLoop
+local godModeConnection
+
+local function applyGodMode(c)
+    if not c then return end
+    local hum = c:FindFirstChildOfClass("Humanoid")
+    if hum then
+        pcall(function()
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            if hum.MaxHealth < 9999999 then
+                hum.MaxHealth = 9999999
+            end
+            hum.Health = hum.MaxHealth
+        end)
+    end
+end
+
 local function toggleGodMode(state)
     isGodMode = state
+    local c = player.Character or player.CharacterAdded:Wait()
+    
     if isGodMode then
-        if not godModeLoop then
-            godModeLoop = game:GetService("RunService").Heartbeat:Connect(function()
-                pcall(function()
-                    local c = game:GetService("Players").LocalPlayer.Character
-                    if c and c:FindFirstChild("Humanoid") then
-                        local hum = c.Humanoid
-                        if hum.MaxHealth < 999999 then
-                            hum.MaxHealth = 999999
+        applyGodMode(c)
+        if not godModeConnection then
+            godModeConnection = RS.PreRender:Connect(function()
+                if not isGodMode then return end
+                local currentChar = player.Character
+                if currentChar then
+                    local hum = currentChar:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                        if hum.Health < hum.MaxHealth then
+                            hum.Health = hum.MaxHealth
                         end
-                        hum.Health = hum.MaxHealth
                     end
-                end)
+                end
             end)
         end
     else
-        if godModeLoop then
-            godModeLoop:Disconnect()
-            godModeLoop = nil
+        if godModeConnection then
+            godModeConnection:Disconnect()
+            godModeConnection = nil
         end
         pcall(function()
-            local c = game:GetService("Players").LocalPlayer.Character
-            if c and c:FindFirstChild("Humanoid") then
-                c.Humanoid.MaxHealth = 100
-                c.Humanoid.Health = 100
+            if c and c:FindFirstChildOfClass("Humanoid") then
+                local hum = c:FindFirstChildOfClass("Humanoid")
+                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+                hum.MaxHealth = 100
+                hum.Health = 100
             end
         end)
     end
@@ -125,7 +145,6 @@ end
 -- === แท็บตัวละคร ===
 local MainTab = Window:CreateTab("ใช้บ่อย")
 local UserInputService = game:GetService("UserInputService")
-local godmodeToggled = false
 
 local GodModeToggleUI = MainTab:CreateToggle({
     Name = "อมตะ (Godmode)",
@@ -546,8 +565,6 @@ MainTab:CreateKeybind({
         end)
     end
 })
-
-
 
 -- === แท็บวาปสถานที่ ===
 local tpTab = Window:CreateTab("วาปไปที่ต่างๆ")
@@ -1390,6 +1407,10 @@ player.CharacterAdded:Connect(function(c)
     toggleSpeed(false)
     noclipEnabled = false
     infJumpEnabled = false
+    if isGodMode then
+        task.wait(0.2)
+        toggleGodMode(true)
+    end
     Rayfield:LoadConfiguration()
 end)
 
