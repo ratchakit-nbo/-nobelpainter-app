@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- สร้าง Window
 local Window = Rayfield:CreateWindow({
-   Name = "พ่อโนเบล v99.0",
+   Name = "พ่อโนเบล v2.0",
    Icon = nil,
    LoadingTitle = "ยินดีต้อนรับ สคริปต์ของ พ่อโนเบล",
    LoadingSubtitle = "power panel team",
@@ -87,7 +87,7 @@ local function toggleSpeed(on)
     Rayfield:Notify({Title = superSpeed and "วิ่งเร็วเปิด" or "วิ่งเร็วปิด", Content = superSpeed and "วิ่งเร็วสุดขีด!" or "กลับสู่ความเร็วปกติ", Duration = 3, Image = 6023426921})
 end
 
--- === ฟังก์ชันอมตะ (Godmode Safe) ===
+-- === ฟังก์ชันอมตะ (Godmode Safe & Anti-Monster) ===
 local isGodMode = false
 local godModeLoop
 
@@ -99,33 +99,34 @@ local function toggleGodMode(state)
                 pcall(function()
                     local currentPlayer = game:GetService("Players").LocalPlayer
                     local c = currentPlayer.Character
-                    if c and c:FindFirstChild("Humanoid") then
+                    if c and c:FindFirstChild("Humanoid") and c:FindFirstChild("HumanoidRootPart") then
                         local hum = c.Humanoid
+                        local myHrp = c.HumanoidRootPart
                         
-                        -- 1. ล็อกเลือดให้เต็มตลอด โดยไม่ปรับ MaxHealth เพื่อป้องกันเกมแบนหรือตรวจจับ
-                        if hum.Health < hum.MaxHealth then
+                        -- 1. ป้องกันสถานะการตายของเกม
+                        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                        
+                        -- 2. ล็อกเลือดให้เต็มตลอด
+                        if hum.Health > 0 and hum.Health < hum.MaxHealth then
                             hum.Health = hum.MaxHealth
                         end
                         
-                        -- 2. สร้าง ForceField ล่องหน (ช่วยบล็อคดาเมจพื้นฐานของ Roblox มอนอาจจะตีไม่เข้าเลย)
+                        -- 3. สร้าง ForceField ล่องหน
                         if not c:FindFirstChildOfClass("ForceField") then
                             local ff = Instance.new("ForceField")
                             ff.Visible = false
                             ff.Parent = c
                         end
 
-                        -- 3. ล็อกค่าความหิว/น้ำ/สตามิน่า (ตรวจสอบจากทั้งตัว Player และ Character)
+                        -- 4. ล็อกค่าความหิว/น้ำ/สตามิน่า
                         local function lockStats(obj)
                             if not obj then return end
-                            -- เช็คแบบ Attributes สมัยใหม่
                             local statNames = {"Hunger", "Thirst", "Food", "Water", "Energy", "Stamina"}
                             for _, attrName in ipairs(statNames) do
                                 if obj:GetAttribute(attrName) ~= nil then 
                                     obj:SetAttribute(attrName, 100) 
                                 end
                             end
-                            
-                            -- เช็คแบบ ObjectValues ดั้งเดิม (โฟลเดอร์ Stats เป็นต้น)
                             for _, v in pairs(obj:GetDescendants()) do
                                 if v:IsA("NumberValue") or v:IsA("IntValue") then
                                     local lowerName = string.lower(v.Name)
@@ -135,9 +136,33 @@ local function toggleGodMode(state)
                                 end
                             end
                         end
-                        
                         lockStats(c)
                         lockStats(currentPlayer)
+
+                        -- 5. ระบบ Anti-Monster (ป้องกันโดนกัดตายชัวร์ๆ)
+                        local foldersToScan = {game:GetService("Workspace")}
+                        local charsFolder = game:GetService("Workspace"):FindFirstChild("Characters")
+                        if charsFolder then table.insert(foldersToScan, charsFolder) end
+
+                        for _, folder in ipairs(foldersToScan) do
+                            for _, obj in ipairs(folder:GetChildren()) do
+                                if obj:IsA("Model") and obj ~= c and obj:FindFirstChild("Humanoid") and obj:FindFirstChild("HumanoidRootPart") then
+                                    -- ตรวจสอบว่าสิ่งนี้ไม่ใช่อวตารผู้เล่นคนอื่น
+                                    if not game:GetService("Players"):GetPlayerFromCharacter(obj) then
+                                        local dist = (myHrp.Position - obj.HumanoidRootPart.Position).Magnitude
+                                        if dist < 40 then -- ระยะปลอดภัย 40 Studs
+                                            -- ปิดการชนและการสัมผัส (ตีไม่เข้า)
+                                            for _, part in ipairs(obj:GetDescendants()) do
+                                                if part:IsA("BasePart") and part.CanTouch then
+                                                    part.CanTouch = false
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+
                     end
                 end)
             end)
@@ -150,7 +175,9 @@ local function toggleGodMode(state)
         pcall(function()
             local c = game:GetService("Players").LocalPlayer.Character
             if c then
-                -- ลบ ForceField ทิ้งเมื่อปิดใช้งานโหมดอมตะ
+                if c:FindFirstChild("Humanoid") then
+                    c.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+                end
                 for _, obj in pairs(c:GetChildren()) do
                     if obj:IsA("ForceField") then
                         obj:Destroy()
