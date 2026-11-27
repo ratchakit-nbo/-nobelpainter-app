@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>SoundCanvas Pro - วาดรูปดนตรีสไตล์ iPad</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-app: #080c14;
+      --bg-surface: rgba(18, 24, 38, 0.85);
+      --bg-surface-solid: #121826;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.4);
+      --accent-pink: #ec4899;
+      --accent-cyan: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-glass: rgba(255, 255, 255, 0.12);
+      --border-active: rgba(99, 102, 241, 0.7);
+      --dock-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 25px rgba(99, 102, 241, 0.2);
+      --radius-xl: 24px;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-app);
+      font-family: 'Plus Jakarta Sans', 'Prompt', -apple-system, sans-serif;
+      color: var(--text-main);
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #080c14 70%);
+    }
+
+    /* TOP BAR (iPad Style Glass Nav) */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--border-glass);
+      z-index: 50;
+      height: 60px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .top-bar.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .app-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #d946ef);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .brand-text h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #fff, #c7d2fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .brand-text .subtext {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .playback-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      color: #fff;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid var(--border-glass);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .btn-icon {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    /* WORKSPACE */
+    .workspace {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .canvas-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    #paintCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      z-index: 10;
+    }
+
+    /* Sketch Trace Template Layer (Behind Drawing Canvas) */
+    .sketch-template-layer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 600px;
+      height: 70%;
+      pointer-events: none;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease;
+      opacity: 0.35;
+    }
+
+    .sketch-template-layer svg {
+      width: 100%;
+      height: 100%;
+      stroke: #38bdf8;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 6 6;
+      filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4));
+    }
+
+    /* Musical Grid Note Guidance */
+    .musical-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 0;
+      z-index: 2;
+    }
+
+    .pitch-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.08) 10%, rgba(255, 255, 255, 0.08) 90%, transparent);
+      position: relative;
+    }
+
+    .pitch-line::after {
+      content: attr(data-note);
+      position: absolute;
+      left: 20px;
+      top: -10px;
+      font-size: 0.68rem;
+      color: rgba(255, 255, 255, 0.22);
+      font-weight: 500;
+    }
+
+    /* Playhead Scan Line */
+    .playhead-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, #ec4899, #6366f1, #38bdf8);
+      box-shadow: 0 0 15px #6366f1, 0 0 30px #ec4899;
+      z-index: 20;
+      display: none;
+      pointer-events: none;
+    }
+
+    /* FLOATING TOGGLE PILL FOR DOCK (SHOW/HIDE) */
+    .dock-toggle-btn {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      color: var(--text-muted);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      z-index: 45;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      transition: all 0.25s ease;
+    }
+
+    .dock-toggle-btn:hover {
+      color: #fff;
+      border-color: var(--border-active);
+      background: rgba(99, 102, 241, 0.2);
+    }
+
+    /* FLOATING IPAD TOOLBAR DOCK */
+    .floating-dock {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 24, 38, 0.88);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--dock-shadow);
+      z-index: 40;
+      transition: transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.3s ease;
+    }
+
+    .floating-dock.hidden {
+      transform: translate(-50%, 150px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .dock-section {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dock-divider {
+      width: 1px;
+      height: 32px;
+      background: var(--border-glass);
+      margin: 0 4px;
+    }
+
+    .dock-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-family: inherit;
+    }
+
+    .dock-btn i {
+      font-size: 1.1rem;
+    }
+
+    .dock-btn .dock-label {
+      font-size: 0.63rem;
+      font-weight: 500;
+    }
+
+    .dock-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .dock-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    /* Color Swatches */
+    .color-swatch-list {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .color-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background-color: var(--c);
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .color-swatch:hover, .color-swatch.active {
+      transform: scale(1.2);
+      border-color: #fff;
+      box-shadow: 0 0 10px var(--c);
+    }
+
+    .custom-color-picker {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #f43f5e, #eab308, #10b981, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      font-size: 0.7rem;
+    }
+
+    .custom-color-picker input[type="color"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* SKETCH TEMPLATE SELECTOR MODAL / POPOVER */
+    .template-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      width: 90%;
+      max-width: 580px;
+      background: rgba(18, 24, 38, 0.95);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+      z-index: 60;
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      transition: all 0.25s ease;
+    }
+
+    .template-modal.show {
+      display: flex;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-glass);
+      padding-bottom: 12px;
+    }
+
+    .modal-header h3 {
+      font-size: 1.1rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .template-category-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-glass);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 12px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .template-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-card:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .template-card.active {
+      background: rgba(99, 102, 241, 0.3);
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .template-card svg {
+      width: 44px;
+      height: 44px;
+      stroke: #38bdf8;
+      stroke-width: 2.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .template-card span {
+      font-size: 0.72rem;
+      color: var(--text-main);
+    }
+
+    .template-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border-glass);
+      padding-top: 12px;
+    }
+
+    /* SETTINGS POPOVER CARD */
+    .settings-popover {
+      position: absolute;
+      bottom: 110px;
+      right: 30px;
+      width: 320px;
+      background: rgba(18, 24, 38, 0.95);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.75);
+      z-index: 55;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .settings-popover.show {
+      display: flex;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-group label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .control-group.toggle-row {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .custom-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.12);
+      outline: none;
+    }
+
+    .custom-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .sound-chip-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .sound-chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-glass);
+      color: var(--text-muted);
+      padding: 7px;
+      border-radius: var(--radius-md);
+      font-size: 0.73rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .sound-chip.active {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: var(--border-active);
+      color: #a5b4fc;
+    }
+
+    .custom-switch {
+      appearance: none;
+      width: 40px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .custom-switch:checked {
+      background: var(--primary);
+    }
+
+    .custom-switch::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .custom-switch:checked::before {
+      transform: translateX(18px);
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    /* Floating Fullscreen Trigger Indicator */
+    .fs-pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid var(--border-active);
+      border-radius: 20px;
+      color: #c7d2fe;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .top-bar { padding: 8px 12px; }
+      .brand-text h2 { font-size: 0.9rem; }
+      .floating-dock {
+        width: 96%;
+        max-width: 500px;
+        bottom: 45px;
+        padding: 6px 8px;
+        overflow-x: auto;
+      }
+      .dock-btn { width: 40px; height: 40px; }
+      .settings-popover { right: 4%; width: 92%; bottom: 90px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container" id="appContainer">
+    <!-- Top Action Bar -->
+    <header class="top-bar" id="topBar">
+      <div class="brand">
+        <div class="app-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div class="brand-text">
+          <h2>SoundCanvas Pro</h2>
+          <span class="subtext">Draw to Melody • สเก็ตช์เสียงดนตรี</span>
+        </div>
+      </div>
+
+      <div class="playback-controls">
+        <button id="btnTemplatesToggle" class="btn btn-secondary" title="เลือกแบบร่างจางๆ สำหรับฝึกวาด">
+          <i class="fa-solid fa-shapes"></i> <span>แบบร่าง (Sketch)</span>
+        </button>
+        <button id="btnPlayScan" class="btn btn-primary" title="เล่นสแกนเพลงจากซ้ายไปขวา">
+          <i class="fa-solid fa-play"></i> <span>เล่นเพลง</span>
+        </button>
+        <button id="btnStopScan" class="btn btn-secondary" title="หยุดเล่นเพลง" style="display:none;">
+          <i class="fa-solid fa-stop"></i> <span>หยุด</span>
+        </button>
+        <button id="btnFullscreen" class="btn btn-icon btn-secondary" title="สลับโหมดเต็มหน้าจอ (Fullscreen)">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+        <button id="btnClear" class="btn btn-icon btn-danger" title="ล้างหน้าจอทั้งหมด">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Workspace -->
+    <div class="workspace" id="workspace">
+      <!-- Trace Template SVG Overlay (Draw Guidance) -->
+      <div class="sketch-template-layer" id="sketchLayer">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Musical Grid Lines (Pitch Reference) -->
+      <div class="musical-grid">
+        <div class="pitch-line" data-note="C6 (High Pitch)"></div>
+        <div class="pitch-line" data-note="G5"></div>
+        <div class="pitch-line" data-note="C5 (Mid High)"></div>
+        <div class="pitch-line" data-note="G4"></div>
+        <div class="pitch-line" data-note="C4 (Middle C)"></div>
+        <div class="pitch-line" data-note="G3"></div>
+        <div class="pitch-line" data-note="C3 (Deep Bass)"></div>
+      </div>
+
+      <!-- Scan Line Indicator -->
+      <div id="playheadScan" class="playhead-line"></div>
+
+      <!-- Main Interactive Canvas -->
+      <canvas id="paintCanvas"></canvas>
+
+      <!-- Toggle Dock Button (Show / Hide iPad Toolbar) -->
+      <button class="dock-toggle-btn" id="btnToggleDock">
+        <i class="fa-solid fa-chevron-down" id="dockToggleIcon"></i>
+        <span id="dockToggleText">ซ่อนเครื่องมือ</span>
+      </button>
+
+      <!-- Floating iPad Dock Toolbar -->
+      <aside class="floating-dock" id="floatingDock">
+        <div class="dock-section tools">
+          <button class="dock-btn active" data-tool="pen" title="ปากกาเส้นคม (Pencil)">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span class="dock-label">ปากกา</span>
+          </button>
+          <button class="dock-btn" data-tool="brush" title="พู่กันนุ่มนวล (Soft Brush)">
+            <i class="fa-solid fa-paintbrush"></i>
+            <span class="dock-label">พู่กัน</span>
+          </button>
+          <button class="dock-btn" data-tool="glow" title="ปากกานีออนเรืองแสง (Glow Pen)">
+            <i class="fa-solid fa-bolt"></i>
+            <span class="dock-label">นีออน</span>
+          </button>
+          <button class="dock-btn" data-tool="rainbow" title="ปากกาสีรุ้ง (Rainbow)">
+            <i class="fa-solid fa-rainbow"></i>
+            <span class="dock-label">สีรุ้ง</span>
+          </button>
+          <button class="dock-btn" data-tool="eraser" title="ยางลบ (Eraser)">
+            <i class="fa-solid fa-eraser"></i>
+            <span class="dock-label">ยางลบ</span>
+          </button>
+        </div>
+
+        <div class="dock-divider"></div>
+
+        <!-- Color Palette Quick Picks -->
+        <div class="dock-section colors">
+          <div class="color-swatch-list">
+            <button class="color-swatch active" style="--c: #6366f1;" data-color="#6366f1"></button>
+            <button class="color-swatch" style="--c: #ec4899;" data-color="#ec4899"></button>
+            <button class="color-swatch" style="--c: #f59e0b;" data-color="#f59e0b"></button>
+            <button class="color-swatch" style="--c: #10b981;" data-color="#10b981"></button>
+            <button class="color-swatch" style="--c: #06b6d4;" data-color="#06b6d4"></button>
+            <button class="color-swatch" style="--c: #ffffff;" data-color="#ffffff"></button>
+            <label class="custom-color-picker" title="เลือกสีเอง">
+              <input type="color" id="nativeColorPicker" value="#8b5cf6">
+              <i class="fa-solid fa-eye-dropper"></i>
+            </label>
+          </div>
+        </div>
+
+        <div class="dock-divider"></div>
+
+        <!-- Actions -->
+        <div class="dock-section actions">
+          <button class="dock-btn" id="btnSettingsToggle" title="ตั้งค่าหัวแปรงและเสียง">
+            <i class="fa-solid fa-sliders"></i>
+            <span class="dock-label">ตั้งค่า</span>
+          </button>
+          <button class="dock-btn" id="btnUndo" title="เลิกทำ (Undo)">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span class="dock-label">ย้อนกลับ</span>
+          </button>
+          <button class="dock-btn" id="btnRedo" title="ทำซ้ำ (Redo)">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span class="dock-label">ถัดไป</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Settings Popover -->
+      <div class="settings-popover" id="settingsPopover">
+        <div class="modal-header">
+          <h4 style="font-size:0.95rem; font-weight:600;"><i class="fa-solid fa-sliders"></i> การตั้งค่า & เครื่องดนตรี</h4>
+          <button id="btnClosePopover" class="btn-close">&times;</button>
+        </div>
+
+        <div class="control-group">
+          <label>ขนาดแปรง (<span id="brushSizeVal">6</span>px)</label>
+          <input type="range" id="brushSizeSlider" min="2" max="60" value="6" class="custom-range">
+        </div>
+
+        <div class="control-group">
+          <label>ความโปร่งใส (<span id="opacityVal">100</span>%)</label>
+          <input type="range" id="opacitySlider" min="10" max="100" value="100" class="custom-range">
+        </div>
+
+        <div class="control-group">
+          <label>เครื่องดนตรี / โทนเสียง</label>
+          <div class="sound-chip-group">
+            <button class="sound-chip active" data-wave="sine"><i class="fa-solid fa-music"></i> นุ่มนวล (Sine)</button>
+            <button class="sound-chip" data-wave="triangle"><i class="fa-solid fa-bell"></i> ฟลุต/เบลล์</button>
+            <button class="sound-chip" data-wave="square"><i class="fa-solid fa-gamepad"></i> 8-Bit เรโทร</button>
+            <button class="sound-chip" data-wave="sawtooth"><i class="fa-solid fa-guitar"></i> ซินธ์จัดจ้าน</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>ความเร็วการสแกนเพลง (<span id="bpmVal">1.0</span>x)</label>
+          <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="1.0" class="custom-range">
+        </div>
+
+        <div class="control-group toggle-row">
+          <label for="chkRealtimeSound">เล่นเสียงสดขณะวาด</label>
+          <input type="checkbox" id="chkRealtimeSound" checked class="custom-switch">
+        </div>
+
+        <div class="control-group toggle-row">
+          <label for="chkPentatonic">บันไดเสียงเพนทาทอนิก (ไพเราะเสมอ)</label>
+          <input type="checkbox" id="chkPentatonic" checked class="custom-switch">
+        </div>
+      </div>
+
+      <!-- Sketch Template Selector Modal -->
+      <div class="template-modal" id="templateModal">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-shapes"></i> เลือกแบบร่างสำหรับวาดตาม (Sketch Guide)</h3>
+          <button id="btnCloseTemplateModal" class="btn-close">&times;</button>
+        </div>
+
+        <div class="template-category-tabs">
+          <button class="tab-btn active" data-category="animals">🐾 สัตว์น่ารัก</button>
+          <button class="tab-btn" data-category="objects">🚀 สิ่งของ &amp; ยานพาหนะ</button>
+          <button class="tab-btn" data-category="stars">✨ ดวงดาว &amp; อวกาศ</button>
+          <button class="tab-btn" data-category="flowers">🌸 ดอกไม้ &amp; ธรรมชาติ</button>
+        </div>
+
+        <div class="template-grid" id="templateGrid">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="template-controls-bar">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:0.8rem; color:var(--text-muted);">ความจางของแบบร่าง:</label>
+            <input type="range" id="templateOpacitySlider" min="5" max="80" value="35" class="custom-range" style="width:110px;">
+          </div>
+          <button id="btnRemoveTemplate" class="btn btn-secondary" style="font-size:0.75rem;">
+            <i class="fa-solid fa-eye-slash"></i> ไม่แสดงแบบร่าง
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * SVG Templates Database (สัตว์, สิ่งของ, ดวงดาว, ดอกไม้)
+     */
+    const TEMPLATES = {
+      animals: [
+        {
+          name: 'แมวน้อย (Cat)',
+          svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="55" r="28"/><polygon points="28,34 32,15 45,30"/><polygon points="72,34 68,15 55,30"/><ellipse cx="40" cy="50" rx="3" ry="4"/><ellipse cx="60" cy="50" rx="3" ry="4"/><path d="M46 58 Q50 63 54 58"/><path d="M22 55 L35 56 M20 62 L35 60"/><path d="M78 55 L65 56 M80 62 L65 60"/></svg>`
+        },
+        {
+          name: 'หมีน่ารัก (Bear)',
+          svg: `<svg viewBox="0 0 100 100"><circle cx="28" cy="28" r="12"/><circle cx="72" cy="28" r="12"/><circle cx="50" cy="55" r="32"/><ellipse cx="40" cy="48" rx="3.5" ry="4"/><ellipse cx="60" cy="48" rx="3.5" ry="4"/><ellipse cx="50" cy="62" rx="14" ry="10"/><circle cx="50" cy="58" r="4"/><path d="M50 62 L50 68 M44 68 Q50 72 56 68"/></svg>`
+        },
+        {
+          name: 'นกเพนกวิน (Penguin)',
+          svg: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="55" rx="26" ry="36"/><ellipse cx="50" cy="60" rx="18" ry="26"/><polygon points="45,40 55,40 50,48"/><circle cx="40" cy="35" r="3"/><circle cx="60" cy="35" r="3"/><path d="M24 55 Q16 65 22 75"/><path d="M76 55 Q84 65 78 75"/><ellipse cx="38" cy="91" rx="8" ry="3"/><ellipse cx="62" cy="91" rx="8" ry="3"/></svg>`
+        },
+        {
+          name: 'ปลาทอง (Fish)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M25 50 Q50 20 75 50 Q50 80 25 50 Z"/><polygon points="75,50 92,30 84,50 92,70"/><circle cx="38" cy="44" r="3.5"/><path d="M52 40 Q58 50 52 60"/><path d="M40 30 Q50 22 62 34"/></svg>`
+        },
+        {
+          name: 'ผีเสื้อ (Butterfly)',
+          svg: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="3.5" ry="24"/><path d="M47 38 C20 10 10 40 47 50 C12 60 20 85 47 62"/><path d="M53 38 C80 10 90 40 53 50 C88 60 80 85 53 62"/><path d="M48 27 Q40 15 36 18"/><path d="M52 27 Q60 15 64 18"/></svg>`
+        }
+      ],
+      objects: [
+        {
+          name: 'จรวด (Rocket)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M50 15 C40 30 35 60 35 75 L65 75 C65 60 60 30 50 15 Z"/><circle cx="50" cy="45" r="7"/><path d="M35 60 L18 78 L35 75 Z"/><path d="M65 60 L82 78 L65 75 Z"/><path d="M42 75 L45 88 L50 82 L55 88 L58 75"/></svg>`
+        },
+        {
+          name: 'รถยนต์ (Car)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M15 62 L24 45 L42 45 L52 35 L76 35 L88 45 L92 62 Z"/><circle cx="32" cy="64" r="9"/><circle cx="75" cy="64" r="9"/><line x1="52" y1="35" x2="52" y2="45"/><rect x="56" y="38" width="16" height="7"/></svg>`
+        },
+        {
+          name: 'แก้วกาแฟ (Coffee)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M25 35 L30 75 Q32 82 50 82 Q68 82 70 75 L75 35 Z"/><path d="M72 42 Q86 42 86 56 Q86 70 70 68"/><ellipse cx="50" cy="35" rx="25" ry="7"/><path d="M42 25 Q46 18 42 12 M50 25 Q54 18 50 12 M58 25 Q62 18 58 12"/></svg>`
+        },
+        {
+          name: 'เรือใบ (Sailboat)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M18 70 L30 85 L70 85 L84 70 Z"/><line x1="50" y1="20" x2="50" y2="70"/><polygon points="50,22 80,65 50,65"/><polygon points="46,30 24,65 46,65"/></svg>`
+        },
+        {
+          name: 'โน้ตเพลง (Music Note)',
+          svg: `<svg viewBox="0 0 100 100"><ellipse cx="32" cy="72" rx="10" ry="7" transform="rotate(-20 32 72)"/><ellipse cx="68" cy="62" rx="10" ry="7" transform="rotate(-20 68 62)"/><line x1="40" y1="69" x2="40" y2="25"/><line x1="76" y1="59" x2="76" y2="15"/><polygon points="40,25 76,15 76,25 40,35"/></svg>`
+        }
+      ],
+      stars: [
+        {
+          name: 'ดวงดาว 5 แฉก (Star)',
+          svg: `<svg viewBox="0 0 100 100"><polygon points="50,12 62,38 90,38 67,55 76,82 50,65 24,82 33,55 10,38 38,38"/></svg>`
+        },
+        {
+          name: 'พระจันทร์เสี้ยว (Moon)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M60 15 C35 25 30 65 65 85 C40 85 20 60 30 35 C35 23 48 15 60 15 Z"/><circle cx="72" cy="30" r="2.5"/><circle cx="78" cy="50" r="1.8"/><circle cx="68" cy="65" r="2"/></svg>`
+        },
+        {
+          name: 'ดาวเสาร์ (Saturn)',
+          svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="22"/><ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(-25 50 50)"/><circle cx="38" cy="42" r="3"/><circle cx="58" cy="55" r="4"/></svg>`
+        },
+        {
+          name: 'ดวงอาทิตย์ (Sun)',
+          svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="20"/><line x1="50" y1="12" x2="50" y2="22"/><line x1="50" y1="78" x2="50" y2="88"/><line x1="12" y1="50" x2="22" y2="50"/><line x1="78" y1="50" x2="88" y2="50"/><line x1="24" y1="24" x2="31" y2="31"/><line x1="69" y1="69" x2="76" y2="76"/><line x1="76" y1="24" x2="69" y2="31"/><line x1="31" y1="69" x2="24" y2="76"/></svg>`
+        },
+        {
+          name: 'ดาวตก (Shooting Star)',
+          svg: `<svg viewBox="0 0 100 100"><polygon points="75,25 80,36 92,36 82,44 86,55 75,48 64,55 68,44 58,36 70,36"/><path d="M65 48 L20 78 M55 52 L15 85 M60 40 L30 65"/></svg>`
+        }
+      ],
+      flowers: [
+        {
+          name: 'ดอกทานตะวัน (Sunflower)',
+          svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="42" r="14"/><ellipse cx="50" cy="18" rx="6" ry="12"/><ellipse cx="50" cy="66" rx="6" ry="12"/><ellipse cx="26" cy="42" rx="12" ry="6"/><ellipse cx="74" cy="42" rx="12" ry="6"/><ellipse cx="33" cy="25" rx="6" ry="12" transform="rotate(-45 33 25)"/><ellipse cx="67" cy="59" rx="6" ry="12" transform="rotate(-45 67 59)"/><ellipse cx="67" cy="25" rx="6" ry="12" transform="rotate(45 67 25)"/><ellipse cx="33" cy="59" rx="6" ry="12" transform="rotate(45 33 59)"/><path d="M50 56 Q50 85 46 95"/></svg>`
+        },
+        {
+          name: 'ดอกทิวลิป (Tulip)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M35 55 C25 35 35 20 48 35 C48 20 52 20 52 35 C65 20 75 35 65 55 C55 68 45 68 35 55 Z"/><path d="M50 62 L50 92"/><path d="M50 78 Q30 75 26 62"/><path d="M50 82 Q70 78 74 65"/></svg>`
+        },
+        {
+          name: 'ดอกเดซี่ 5 กลีบ (Daisy)',
+          svg: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="10"/><circle cx="50" cy="30" r="10"/><circle cx="69" cy="44" r="10"/><circle cx="62" cy="67" r="10"/><circle cx="38" cy="67" r="10"/><circle cx="31" cy="44" r="10"/><line x1="50" y1="70" x2="50" y2="95"/></svg>`
+        },
+        {
+          name: 'ต้นกระบองเพชร (Cactus)',
+          svg: `<svg viewBox="0 0 100 100"><path d="M42 90 L42 32 Q42 22 50 22 Q58 22 58 32 L58 90"/><path d="M42 55 L30 55 Q24 55 24 45 L24 38 Q24 32 28 32 Q32 32 32 38 L32 47 L42 47"/><path d="M58 60 L68 60 Q74 60 74 50 L74 42 Q74 36 70 36 Q66 36 66 42 L66 52 L58 52"/><rect x="36" y="86" width="28" height="10" rx="3"/></svg>`
+        },
+        {
+          name: 'ใบโคลเวอร์ (Clover)',
+          svg: `<svg viewBox="0 0 100 100"><circle cx="38" cy="38" r="13"/><circle cx="62" cy="38" r="13"/><circle cx="38" cy="62" r="13"/><circle cx="62" cy="62" r="13"/><path d="M50 50 Q56 80 44 95"/></svg>`
+        }
+      ]
+    };
+
+    /**
+     * Web Audio API Synthesizer Engine
+     */
+    let audioCtx = null;
+    let liveOscillator = null;
+    let liveGainNode = null;
+
+    // Pentatonic Scale (C3 to G6)
+    const PENTATONIC_SCALE = [
+      130.81, 146.83, 164.81, 196.00, 220.00, // C3, D3, E3, G3, A3
+      261.63, 293.66, 329.63, 392.00, 440.00, // C4, D4, E4, G4, A4
+      523.25, 587.33, 659.25, 783.99, 880.00, // C5, D5, E5, G5, A5
+      1046.50, 1174.66, 1318.51, 1567.98       // C6, D6, E6, G6
+    ];
+
+    const state = {
+      currentTool: 'pen',
+      currentColor: '#6366f1',
+      brushSize: 6,
+      opacity: 1.0,
+      oscillatorType: 'sine',
+      realtimeAudio: true,
+      usePentatonic: true,
+      scanSpeed: 1.0,
+      rainbowHue: 0,
+      isDrawing: false,
+      isPlayingScan: false,
+      isDockVisible: true
+    };
+
+    const canvas = document.getElementById('paintCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    let strokesHistory = [];
+    let redoStack = [];
+    let currentStroke = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function yToFrequency(y, height) {
+      const norm = Math.max(0, Math.min(1, 1 - (y / height)));
+      if (state.usePentatonic) {
+        const idx = Math.min(PENTATONIC_SCALE.length - 1, Math.floor(norm * PENTATONIC_SCALE.length));
+        return PENTATONIC_SCALE[idx];
+      } else {
+        const minF = 110;
+        const maxF = 1200;
+        return minF * Math.pow(maxF / minF, norm);
+      }
+    }
+
+    function startLiveTone(freq) {
+      if (!state.realtimeAudio) return;
+      initAudio();
+      if (!liveOscillator) {
+        liveOscillator = audioCtx.createOscillator();
+        liveGainNode = audioCtx.createGain();
+        liveOscillator.type = state.oscillatorType;
+        liveOscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        liveGainNode.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        liveGainNode.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+
+        liveOscillator.connect(liveGainNode);
+        liveGainNode.connect(audioCtx.destination);
+        liveOscillator.start();
+      } else {
+        liveOscillator.frequency.cancelScheduledValues(audioCtx.currentTime);
+        liveOscillator.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.02);
+      }
+    }
+
+    function stopLiveTone() {
+      if (liveGainNode && liveOscillator) {
+        liveGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+        liveGainNode.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.04);
+        setTimeout(() => {
+          if (liveOscillator) {
+            try {
+              liveOscillator.stop();
+              liveOscillator.disconnect();
+            } catch (e) {}
+            liveOscillator = null;
+            liveGainNode = null;
+          }
+        }, 50);
+      }
+    }
+
+    function playToneNote(freq, duration = 0.12, volume = 0.25) {
+      initAudio();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = state.oscillatorType;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(volume, audioCtx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(audioCtx.currentTime);
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (err) {}
+    }
+
+    // Dynamic High-DPI Canvas Resizing
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      const temp = document.createElement('canvas');
+      temp.width = canvas.width;
+      temp.height = canvas.height;
+      const tCtx = temp.getContext('2d');
+      tCtx.drawImage(canvas, 0, 0);
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      ctx.drawImage(temp, 0, 0, rect.width, rect.height);
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      redrawAllStrokes();
+    });
+
+    function getEventPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function applyBrushStyle(stroke) {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = stroke.size;
+      ctx.globalAlpha = stroke.opacity;
+
+      if (stroke.tool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.shadowBlur = 0;
+      } else if (stroke.tool === 'brush') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = stroke.color;
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = stroke.color;
+        ctx.globalAlpha = stroke.opacity * 0.7;
+      } else if (stroke.tool === 'glow') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowBlur = stroke.size * 2;
+        ctx.shadowColor = stroke.color;
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = stroke.color;
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function redrawAllStrokes() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const stroke of strokesHistory) {
+        if (!stroke.points || stroke.points.length === 0) continue;
+        ctx.beginPath();
+        applyBrushStyle(stroke);
+        ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+        ctx.stroke();
+      }
+    }
+
+    function startDrawing(e) {
+      state.isDrawing = true;
+      redoStack = [];
+      const pos = getEventPos(e);
+      const freq = yToFrequency(pos.y, canvas.clientHeight);
+
+      currentStroke = {
+        tool: state.currentTool,
+        color: state.currentColor,
+        size: state.brushSize,
+        opacity: state.opacity,
+        points: [{ x: pos.x, y: pos.y, freq }]
+      };
+
+      startLiveTone(freq);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      applyBrushStyle(currentStroke);
+      ctx.lineTo(pos.x + 0.1, pos.y + 0.1);
+      ctx.stroke();
+    }
+
+    function drawMove(e) {
+      if (!state.isDrawing || !currentStroke) return;
+      const pos = getEventPos(e);
+      const freq = yToFrequency(pos.y, canvas.clientHeight);
+      currentStroke.points.push({ x: pos.x, y: pos.y, freq });
+
+      if (state.currentTool === 'rainbow') {
+        state.rainbowHue = (state.rainbowHue + 3) % 360;
+        currentStroke.color = `hsl(${state.rainbowHue}, 90%, 60%)`;
+      }
+
+      applyBrushStyle(currentStroke);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+
+      startLiveTone(freq);
+    }
+
+    function endDrawing() {
+      if (!state.isDrawing) return;
+      state.isDrawing = false;
+      stopLiveTone();
+      if (currentStroke && currentStroke.points.length > 0) {
+        strokesHistory.push(currentStroke);
+        currentStroke = null;
+      }
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      startDrawing(e);
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (state.isDrawing) {
+        e.preventDefault();
+        drawMove(e);
+      }
+    });
+    window.addEventListener('pointerup', endDrawing);
+    window.addEventListener('pointercancel', endDrawing);
+
+    // Scan Playback
+    const playhead = document.getElementById('playheadScan');
+    const btnPlay = document.getElementById('btnPlayScan');
+    const btnStop = document.getElementById('btnStopScan');
+    let scanAnimationFrame = null;
+
+    function startScanPlayback() {
+      if (strokesHistory.length === 0) {
+        alert('กรุณาวาดรูปร่างหรือเส้นก่อนกดเล่นเพลงครับ');
+        return;
+      }
+      initAudio();
+      state.isPlayingScan = true;
+      btnPlay.style.display = 'none';
+      btnStop.style.display = 'inline-flex';
+      playhead.style.display = 'block';
+
+      const allPoints = [];
+      for (const s of strokesHistory) {
+        if (s.tool === 'eraser') continue;
+        for (const pt of s.points) allPoints.push(pt);
+      }
+      allPoints.sort((a, b) => a.x - b.x);
+
+      const canvasWidth = canvas.clientWidth;
+      const duration = (canvasWidth / (180 * state.scanSpeed)) * 1000;
+      const startTime = performance.now();
+      let lastPlayedX = -1;
+
+      function step(currentTime) {
+        if (!state.isPlayingScan) return;
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const currentX = progress * canvasWidth;
+        playhead.style.left = `${currentX}px`;
+
+        const threshold = 12;
+        const active = allPoints.filter(p => Math.abs(p.x - currentX) < threshold);
+        if (active.length > 0 && Math.abs(currentX - lastPlayedX) > 10) {
+          lastPlayedX = currentX;
+          playToneNote(active[0].freq, 0.15, 0.22);
+        }
+
+        if (progress < 1) {
+          scanAnimationFrame = requestAnimationFrame(step);
+        } else {
+          stopScanPlayback();
+        }
+      }
+      scanAnimationFrame = requestAnimationFrame(step);
+    }
+
+    function stopScanPlayback() {
+      state.isPlayingScan = false;
+      if (scanAnimationFrame) cancelAnimationFrame(scanAnimationFrame);
+      playhead.style.display = 'none';
+      btnPlay.style.display = 'inline-flex';
+      btnStop.style.display = 'none';
+    }
+
+    btnPlay.addEventListener('click', startScanPlayback);
+    btnStop.addEventListener('click', stopScanPlayback);
+
+    // FULLSCREEN FEATURE
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+    btnFullscreen.addEventListener('click', toggleFullscreen);
+
+    // Automatic trigger fullscreen on first interaction if possible
+    window.addEventListener('click', function autoFsOnce() {
+      initAudio();
+      window.removeEventListener('click', autoFsOnce);
+    }, { once: true });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        btnFullscreen.innerHTML = '<i class="fa-solid fa-compress"></i>';
+      } else {
+        btnFullscreen.innerHTML = '<i class="fa-solid fa-expand"></i>';
+      }
+      setTimeout(resizeCanvas, 150);
+    });
+
+    // DOCK TOGGLE (SHOW / HIDE TOOLBAR)
+    const floatingDock = document.getElementById('floatingDock');
+    const btnToggleDock = document.getElementById('btnToggleDock');
+    const dockToggleIcon = document.getElementById('dockToggleIcon');
+    const dockToggleText = document.getElementById('dockToggleText');
+
+    btnToggleDock.addEventListener('click', () => {
+      state.isDockVisible = !state.isDockVisible;
+      if (state.isDockVisible) {
+        floatingDock.classList.remove('hidden');
+        dockToggleIcon.className = 'fa-solid fa-chevron-down';
+        dockToggleText.textContent = 'ซ่อนเครื่องมือ';
+      } else {
+        floatingDock.classList.add('hidden');
+        dockToggleIcon.className = 'fa-solid fa-palette';
+        dockToggleText.textContent = 'แสดงเครื่องมือ';
+        // Hide popover if open
+        document.getElementById('settingsPopover').classList.remove('show');
+      }
+    });
+
+    // TEMPLATES & TRACE LOGIC
+    const sketchLayer = document.getElementById('sketchLayer');
+    const templateModal = document.getElementById('templateModal');
+    const btnTemplatesToggle = document.getElementById('btnTemplatesToggle');
+    const btnCloseTemplateModal = document.getElementById('btnCloseTemplateModal');
+    const templateGrid = document.getElementById('templateGrid');
+    const templateOpacitySlider = document.getElementById('templateOpacitySlider');
+    const btnRemoveTemplate = document.getElementById('btnRemoveTemplate');
+
+    function renderTemplateCards(category) {
+      templateGrid.innerHTML = '';
+      const list = TEMPLATES[category] || [];
+      list.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'template-card';
+        card.innerHTML = `${item.svg}<span>${item.name}</span>`;
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          sketchLayer.innerHTML = item.svg;
+          sketchLayer.style.display = 'flex';
+          templateModal.classList.remove('show');
+        });
+        templateGrid.appendChild(card);
+      });
+    }
+
+    btnTemplatesToggle.addEventListener('click', () => {
+      templateModal.classList.toggle('show');
+      if (templateModal.classList.contains('show')) {
+        renderTemplateCards('animals');
+      }
+    });
+
+    btnCloseTemplateModal.addEventListener('click', () => {
+      templateModal.classList.remove('show');
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderTemplateCards(tab.dataset.category);
+      });
+    });
+
+    templateOpacitySlider.addEventListener('input', (e) => {
+      sketchLayer.style.opacity = e.target.value / 100;
+    });
+
+    btnRemoveTemplate.addEventListener('click', () => {
+      sketchLayer.innerHTML = '';
+      sketchLayer.style.display = 'none';
+      templateModal.classList.remove('show');
+    });
+
+    // Tools & Colors
+    document.querySelectorAll('.dock-btn[data-tool]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.dock-btn[data-tool]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.currentTool = btn.dataset.tool;
+      });
+    });
+
+    document.querySelectorAll('.color-swatch').forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        state.currentColor = swatch.dataset.color;
+      });
+    });
+
+    document.getElementById('nativeColorPicker').addEventListener('input', (e) => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      state.currentColor = e.target.value;
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+      if (confirm('คุณต้องการลบผลงานวาดทั้งหมดใช่หรือไม่?')) {
+        strokesHistory = [];
+        redoStack = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    });
+
+    document.getElementById('btnUndo').addEventListener('click', () => {
+      if (strokesHistory.length > 0) {
+        redoStack.push(strokesHistory.pop());
+        redrawAllStrokes();
+      }
+    });
+
+    document.getElementById('btnRedo').addEventListener('click', () => {
+      if (redoStack.length > 0) {
+        strokesHistory.push(redoStack.pop());
+        redrawAllStrokes();
+      }
+    });
+
+    // Settings
+    const btnSettingsToggle = document.getElementById('btnSettingsToggle');
+    const settingsPopover = document.getElementById('settingsPopover');
+    const btnClosePopover = document.getElementById('btnClosePopover');
+
+    btnSettingsToggle.addEventListener('click', () => settingsPopover.classList.toggle('show'));
+    btnClosePopover.addEventListener('click', () => settingsPopover.classList.remove('show'));
+
+    document.getElementById('brushSizeSlider').addEventListener('input', (e) => {
+      state.brushSize = parseInt(e.target.value, 10);
+      document.getElementById('brushSizeVal').textContent = state.brushSize;
+    });
+
+    document.getElementById('opacitySlider').addEventListener('input', (e) => {
+      state.opacity = parseInt(e.target.value, 10) / 100;
+      document.getElementById('opacityVal').textContent = e.target.value;
+    });
+
+    document.querySelectorAll('.sound-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.sound-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.oscillatorType = chip.dataset.wave;
+      });
+    });
+
+    document.getElementById('speedSlider').addEventListener('input', (e) => {
+      state.scanSpeed = parseFloat(e.target.value);
+      document.getElementById('bpmVal').textContent = state.scanSpeed.toFixed(1);
+    });
+
+    document.getElementById('chkRealtimeSound').addEventListener('change', (e) => {
+      state.realtimeAudio = e.target.checked;
+    });
+
+    document.getElementById('chkPentatonic').addEventListener('change', (e) => {
+      state.usePentatonic = e.target.checked;
+    });
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+    });
+  </script>
+</body>
+</html>
